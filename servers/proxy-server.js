@@ -10,7 +10,9 @@ module.exports = function(port, proxyFactory){
 		key: fs.readFileSync(__dirname + '/localhost.key'),
 		cert: fs.readFileSync(__dirname + '/localhost.cert')
 	};
-	const proxy = proxyFactory(log);
+	
+	const httpProxy = serverFactory.httpsProxy(log);
+	const proxy = proxyFactory(httpProxy, log);
 	
 	const server = serverFactory.listenHttps(port, options, log);
 	server.on('request', proxy);

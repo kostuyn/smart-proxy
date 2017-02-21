@@ -23,6 +23,20 @@ exports.listenHttps = function(port, options, log){
 	return server;
 };
 
+exports.httpsProxy = function(log){
+	return function(req, res, options) {
+		const proxyReq = https.request(options, function (response) {
+			response.pipe(res);
+		});
+
+		req.pipe(proxyReq);
+
+		proxyReq.on('error', function(error){
+			log.error('Https proxy', error);
+		});
+	}
+};
+
 function _onError(port, log) {
 	return function(error) {
 		if(error.syscall !== 'listen') {

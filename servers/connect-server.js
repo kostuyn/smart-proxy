@@ -1,17 +1,36 @@
 'use strict';
 
+const url = require('url');
 const net = require('net');
 const serverFactory = require('./server-factory');
 
 const log = console;
 
-module.exports = function(port, proxyHost, proxyPort){
+module.exports = function(port, proxyHost, proxyPort) {
 	const server = serverFactory.listenHttp(port, log);
 
+
 	server.on('connect', onConnect);
-	
+
 	function onConnect(req, clientSocket, head) {
 		log.info('(CONNECT) Receiving reverse proxy request for:' + req.url);
+
+		const targetUrl = url.format({
+			protocol: 'http',
+			hostname: proxyHost,
+			port: proxyPort
+		});
+		log.info('targetUrl', targetUrl);
+		// const proxy = new httpProxy.createProxyServer({target: targetUrl});
+		// clientSocket.write(
+		// 	'HTTP/1.1 200 Connection Established\r\n' +
+		// 	'Proxy-agent: Smart-Proxy\r\n' +
+		// 	'\r\n');
+		//
+		// proxy.ws(req, clientSocket, head);
+		// proxy.on('proxyReq', function(proxyReq, req, res, options) {
+		// 	proxyReq.setHeader('host', proxyHost + ':' + proxyPort);
+		// });
 
 		var proxySocket = net.connect(proxyPort, proxyHost, function() {
 			clientSocket.write(
@@ -23,7 +42,9 @@ module.exports = function(port, proxyHost, proxyPort){
 			proxySocket.pipe(clientSocket);
 			clientSocket.pipe(proxySocket);
 		});
-
+		// proxy.on('error', function(err) {
+		// 	console.log('proxy', err);
+		// });
 		clientSocket.on('error', function(e) {
 			console.error('socket error', e);
 		});

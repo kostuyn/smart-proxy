@@ -1,12 +1,12 @@
 'use strict';
 
 const express = require('express');
-const httpProxy = require('http-proxy');
+const net = require('net');
+const https = require('https');
 const url = require('url');
 
-module.exports = function(log){
+module.exports = function(httpsProxy, log){
 	const app = express();
-	const proxy = httpProxy.createProxyServer({});
 	//
 	// const router=express.Router();
 	//
@@ -18,25 +18,57 @@ module.exports = function(log){
 	// });
 
 	app.use(function(req, res, next){
+		const protocol = req.headers['x-forwarded-prot'] || 'https';
+		const parsedHost = req.headers['x-forwarded-host'] || req.hostname;
+		const splitHost = parsedHost.split(':');
+
+		console.log(splitHost);
+		const hostName = splitHost[0];
+		const port = splitHost[1] || (protocol == 'https' ? 443 : 80);
+
+		res.locals.protocol = protocol;
+		res.locals.hostName = hostName;
+		res.locals.port = port;
+
+		next();
+	});
+
+	app.use(function(req, res, next){
 		log.info('Hello from Proxy.');
-		log.info(req.headers);
-		log.info(req.method);
+
 		const serverUrl = url.parse(req.url);
 		const remoteUrl = url.format({
-			protocol: 'https',
-			hostname: req.headers.host,
-			port: 443
+			protocol: res.locals.protocol,
+			hostname: res.locals.hostName,
+			port: res.locals.port
 		});
 		console.log(req.url);
 
-		//console.log(serverUrl);
+		console.log(res.locals);
+		console.log(remoteUrl);
 
 		if(serverUrl.pathname == '/_api/searching/startSync2/') {
 			res.status(400);
 			return res.send();
 		}
 
-		proxy.web(req, res, {target: remoteUrl, secure: false});
+		const options = {
+			hostname: res.locals.hostName,
+			port: res.locals.port,
+			path: req.url,
+			method: req.method
+		};
+
+		httpsProxy(req, res, options);
+
+
+		//proxy.web(req, res, {target: remoteUrl, secure: false});
+		// proxy.on('proxyReq', function(proxyReq, req, res, options) {
+		// 	proxyReq.setHeader('host',  res.locals.hostName);
+		// });
+		// proxy.on('error', function(err){
+		// 	console.log('proxy', err);
+		// });
 		// proxy.on('proxyRes', function(proxyRes, req, res) {
 		// 	console.log('proxyRes');
 		// 	//console.log(req1.body);
