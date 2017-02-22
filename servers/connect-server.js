@@ -14,22 +14,6 @@ module.exports = function(port, proxyHost, httpProxyPort, httpsProxyPort) {
 	function onConnect(req, clientSocket, head) {
 		log.info('(CONNECT) Receiving reverse proxy request for:' + req.url);
 
-		// const targetUrl = url.format({
-		// 	hostname: proxyHost,
-		// 	port: httpsProxyPort
-		// });
-		// log.info('targetUrl', targetUrl);
-		// const proxy = new httpProxy.createProxyServer({target: targetUrl});
-		// clientSocket.write(
-		// 	'HTTP/1.1 200 Connection Established\r\n' +
-		// 	'Proxy-agent: Smart-Proxy\r\n' +
-		// 	'\r\n');
-		//
-		// proxy.ws(req, clientSocket, head);
-		// proxy.on('proxyReq', function(proxyReq, req, res, options) {
-		// 	proxyReq.setHeader('host', proxyHost + ':' + httpsProxyPort);
-		// });
-
 		const splitHost = req.url.split(':');
 		const port = parseInt(splitHost[1], 10);
 		const protocol = req.headers['x-forwarded-prot'] || (port == '443' ? 'https' : 'http');
@@ -45,106 +29,9 @@ module.exports = function(port, proxyHost, httpProxyPort, httpsProxyPort) {
 			proxySocket.pipe(clientSocket);
 			clientSocket.pipe(proxySocket);
 		});
-		// proxy.on('error', function(err) {
-		// 	console.log('proxy', err);
-		// });
+		
 		clientSocket.on('error', function(e) {
 			console.error('socket error', e);
 		});
 	}
 };
-
-// const ServerBase = require('./server-base');
-//
-// const serverHelperFactory = require('./server-helper');
-//
-// class ConnectServer extends ServerBase{
-// 	constructor(port, serverFactory, log){
-// 		this._server = serverFactory.createHttp(port);
-// 	}
-//
-// 	start(port, proxyHost, proxyPort){
-// 		this._server.listen();
-//		
-// 		const server = http.createServer(port);
-// 		server.on('connect', onConnect);
-//
-// 		function onConnect(req, clientSocket, head) {
-// 			console.log('(CONNECT) Receiving reverse proxy request for:' + req.url);
-//
-// 			var proxySocket = net.connect(proxyPort, proxyHost, function() {
-// 				clientSocket.write(
-// 					'HTTP/1.1 200 Connection Established\r\n' +
-// 					'Proxy-agent: Smart-Proxy\r\n' +
-// 					'\r\n');
-//
-// 				proxySocket.write(head);
-// 				proxySocket.pipe(clientSocket);
-// 				clientSocket.pipe(proxySocket);
-// 			});
-//
-// 			clientSocket.on('error', function(e) {
-// 				console.error('socket error', e);
-// 			});
-// 		}
-//		
-//		
-// 		server.listen(this._port);
-// 		server.on('connect', onConnect);
-// 		server.on('error', this._onError);
-// 		server.on('listening', this._onListening);
-//
-// 		function onConnect(req, clientSocket, head) {
-// 			console.log('(CONNECT) Receiving reverse proxy request for:' + req.url);
-//
-// 			var proxySocket = net.connect(proxyPort, proxyHost, function() {
-// 				clientSocket.write(
-// 					'HTTP/1.1 200 Connection Established\r\n' +
-// 					'Proxy-agent: Smart-Proxy\r\n' +
-// 					'\r\n');
-//
-// 				proxySocket.write(head);
-// 				proxySocket.pipe(clientSocket);
-// 				clientSocket.pipe(proxySocket);
-// 			});
-//
-// 			clientSocket.on('error', function(e) {
-// 				console.error('socket error', e);
-// 			});
-// 		}
-// 	}
-// }
-//
-// module.exports = function(port){
-// 	return new ConnectServer(port);
-// };
-
-// module.exports = function(proxyHost, proxyPort) {
-// 	const serverHelper = serverHelperFactory();
-// 	const port = serverHelper.normalizePort(process.env.CONNECT_PORT || 9001);
-//
-// 	const server = http.createServer();
-// 	server.listen(port);
-// 	server.on('connect', onConnect);
-// 	server.on('error', serverHelper.onError);
-// 	server.on('listening', serverHelper.onListening);
-//
-// 	function onConnect(req, clientSocket, head) {
-// 		console.log('(CONNECT) Receiving reverse proxy request for:' + req.url);
-//
-// 		var proxySocket = net.connect(proxyPort, proxyHost, function() {
-// 			clientSocket.write(
-// 				'HTTP/1.1 200 Connection Established\r\n' +
-// 				'Proxy-agent: Smart-Proxy\r\n' +
-// 				'\r\n');
-//
-// 			proxySocket.write(head);
-// 			proxySocket.pipe(clientSocket);
-// 			clientSocket.pipe(proxySocket);
-// 		});
-//
-// 		clientSocket.on('error', function(e) {
-// 			console.error('socket error', e);
-// 		});
-// 	}
-// };

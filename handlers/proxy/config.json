@@ -1,0 +1,7 @@
+[
+  {
+    "method": "get",
+    "path": "/_api/searching/startSync2",
+    "statusCode": 400
+  }
+]
