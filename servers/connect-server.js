@@ -6,21 +6,23 @@ const serverFactory = require('./server-factory');
 
 const log = console;
 
-module.exports = function(port, proxyHost, proxyPort) {
+module.exports = function(port, proxyHost, httpProxyPort, httpsProxyPort) {
 	const server = serverFactory.listenHttp(port, log);
-
 
 	server.on('connect', onConnect);
 
 	function onConnect(req, clientSocket, head) {
 		log.info('(CONNECT) Receiving reverse proxy request for:' + req.url);
+		log.info(req.headers);
+		log.info(req.method);
 
-		const targetUrl = url.format({
-			protocol: 'http',
-			hostname: proxyHost,
-			port: proxyPort
-		});
-		log.info('targetUrl', targetUrl);
+
+
+		// const targetUrl = url.format({
+		// 	hostname: proxyHost,
+		// 	port: httpsProxyPort
+		// });
+		// log.info('targetUrl', targetUrl);
 		// const proxy = new httpProxy.createProxyServer({target: targetUrl});
 		// clientSocket.write(
 		// 	'HTTP/1.1 200 Connection Established\r\n' +
@@ -29,8 +31,13 @@ module.exports = function(port, proxyHost, proxyPort) {
 		//
 		// proxy.ws(req, clientSocket, head);
 		// proxy.on('proxyReq', function(proxyReq, req, res, options) {
-		// 	proxyReq.setHeader('host', proxyHost + ':' + proxyPort);
+		// 	proxyReq.setHeader('host', proxyHost + ':' + httpsProxyPort);
 		// });
+
+		const splitHost = req.url.split(':');
+		const port = parseInt(splitHost[1], 10);
+		const protocol = req.headers['x-forwarded-prot'] || (port == '443' ? 'https' : 'http');
+		const proxyPort = protocol == 'https' ? httpsProxyPort : httpProxyPort;
 
 		var proxySocket = net.connect(proxyPort, proxyHost, function() {
 			clientSocket.write(

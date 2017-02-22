@@ -3,7 +3,6 @@
 const http = require('http');
 const https = require('https');
 
-
 exports.listenHttp = function(port, log){
 	const server = http.createServer();
 	server.on('error', _onError(port, log));
@@ -21,6 +20,20 @@ exports.listenHttps = function(port, options, log){
 	server.listen(port);
 	
 	return server;
+};
+
+exports.httpProxy = function(log){
+	return function(req, res, options) {
+		const proxyReq = http.request(options, function (response) {
+			response.pipe(res);
+		});
+
+		req.pipe(proxyReq);
+
+		proxyReq.on('error', function(error){
+			log.error('Https proxy', error);
+		});
+	}
 };
 
 exports.httpsProxy = function(log){

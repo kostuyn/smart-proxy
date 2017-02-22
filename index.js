@@ -6,8 +6,12 @@ const connectServer = require('./servers/connect-server');
 const proxyServer = require('./servers/proxy-server');
 const apiServer = require('./servers/api-server');
 
-connectServer(8001, 'localhost', 9001);
-proxyServer(9001, proxy);
+const httpProxyPort = 9001;
+const httpsProxyPort = 9002;
+
+connectServer(8001, 'localhost', httpProxyPort, httpsProxyPort);
+proxyServer.http(httpProxyPort, proxy);
+proxyServer.https(httpsProxyPort, proxy);
 apiServer(7001, api);
 
 
@@ -19,6 +23,7 @@ setTimeout(function() {
 		url: 'https://module.sletat.ru/Main.svc/GetTourOperators?townFromId=1264&countryId=40',
 		//url: 'https://ott.local/_api/searching/startSync2/?route=2705IEVLON3005&ad=1&cn=0&in=0&cs=E&currency=RUB&source=Spasibo&showProfitParts=true',
 		proxy: 'http://localhost:8001',
+		proxyHeaderWhiteList: ['X-Forwarded-Host', 'X-Forwarded-Prot'],
 		tunnel: true,
 		headers: {
 			host: 'bla-bla',

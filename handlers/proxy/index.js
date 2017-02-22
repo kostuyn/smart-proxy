@@ -22,9 +22,8 @@ module.exports = function(httpsProxy, log){
 		const parsedHost = req.headers['x-forwarded-host'] || req.hostname;
 		const splitHost = parsedHost.split(':');
 
-		console.log(splitHost);
 		const hostName = splitHost[0];
-		const port = splitHost[1] || (protocol == 'https' ? 443 : 80);
+		const port = parseInt(splitHost[1], 10) || (protocol == 'https' ? 443 : 80);
 
 		res.locals.protocol = protocol;
 		res.locals.hostName = hostName;
