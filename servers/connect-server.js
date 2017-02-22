@@ -13,10 +13,6 @@ module.exports = function(port, proxyHost, httpProxyPort, httpsProxyPort) {
 
 	function onConnect(req, clientSocket, head) {
 		log.info('(CONNECT) Receiving reverse proxy request for:' + req.url);
-		log.info(req.headers);
-		log.info(req.method);
-
-
 
 		// const targetUrl = url.format({
 		// 	hostname: proxyHost,

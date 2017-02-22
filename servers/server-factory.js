@@ -23,7 +23,9 @@ exports.listenHttps = function(port, options, log){
 };
 
 exports.httpProxy = function(log){
-	return function(req, res, options) {
+	return function(req, res) {
+		const options = _createOptions(req);
+
 		const proxyReq = http.request(options, function (response) {
 			response.pipe(res);
 		});
@@ -37,7 +39,9 @@ exports.httpProxy = function(log){
 };
 
 exports.httpsProxy = function(log){
-	return function(req, res, options) {
+	return function(req, res) {
+		const options = _createOptions(req);
+
 		const proxyReq = https.request(options, function (response) {
 			response.pipe(res);
 		});
@@ -49,6 +53,22 @@ exports.httpsProxy = function(log){
 		});
 	}
 };
+
+function _createOptions(req){
+	const protocol = req.headers['x-forwarded-prot'] || 'http';
+	const parsedHost = req.headers['x-forwarded-host'] || req.hostname;
+	const splitHost = parsedHost.split(':');
+
+	const hostName = splitHost[0];
+	const port = parseInt(splitHost[1], 10) || (protocol == 'https' ? 443 : 80);
+
+	return {
+		hostname: hostName,
+		port: port,
+		path: req.url,
+		method: req.method
+	};
+}
 
 function _onError(port, log) {
 	return function(error) {
