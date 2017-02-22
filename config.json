@@ -3,5 +3,10 @@
     "method": "get",
     "path": "/_api/searching/startSync2",
     "statusCode": 400
+  },
+  {
+    "method": "get",
+    "path": "/packages/api/searchPolling",
+    "statusCode": 400
   }
 ]

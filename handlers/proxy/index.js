@@ -2,28 +2,35 @@
 
 const express = require('express');
 const net = require('net');
-const https = require('https');
 const url = require('url');
 
-const config = require('./config.json');
-
-module.exports = function(httpsProxy, log){
+module.exports = function(httpsProxy, rulesService, log) {
 	const app = express();
-	const router = express.Router();
-	
+
 	app.disable('x-powered-by');
-	
-	config.forEach(function(rule){
-		router[rule.method](rule.path, function(req, res){
-			res.setHeader('X-Proxy-Response', true);
-			res.status(rule.statusCode);
-			res.send();
-		});
+
+	app.use(function(req, res, next) {
+		const rules = rulesService.getAll();		
+
+		for(let i = 0; i < rules.length; i++) {
+			const rule = rules[i];
+
+			const parsedUrl = url.parse(req.url);
+			const pathName = parsedUrl.pathname.replace(/\/$/, "");
+
+			const params = rule.route.match(pathName);
+			if(params) {
+				log.info('apply rule:', rule.data);
+				res.setHeader('X-Proxy-Response', true);
+				res.status(rule.data.statusCode);
+				return res.send();
+			}
+		}
+
+		next();
 	});
 
-	app.use('/', router);
-
-	app.use(function(req, res, next){
+	app.use(function(req, res, next) {
 		log.info('Hello from Proxy.');
 
 		httpsProxy(req, res);

@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "dependencies": {
     "express": "^4.14.1",
-    "request": "^2.79.0"
+    "lodash": "^4.17.4",
+    "request": "^2.79.0",
+    "route-parser": "0.0.5"
   },
   "scripts": {
     "start": "node index.js"

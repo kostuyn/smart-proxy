@@ -1,17 +1,23 @@
 'use strict';
 
-const proxy = require('./handlers/proxy');
+const proxyFactory = require('./handlers/proxy');
 const api = require('./handlers/api');
 const connectServer = require('./servers/connect-server');
 const proxyServer = require('./servers/proxy-server');
 const apiServer = require('./servers/api-server');
 
+const config = require('./config.json');
+const rulesFactory = require('./services/rules');
+
+const rulesService = rulesFactory();
+rulesService.load(config);
+
 const httpProxyPort = 9001;
 const httpsProxyPort = 9002;
 
 connectServer(8001, 'localhost', httpProxyPort, httpsProxyPort);
-proxyServer.http(httpProxyPort, proxy);
-proxyServer.https(httpsProxyPort, proxy);
+proxyServer.http(httpProxyPort, proxyFactory, rulesService);
+proxyServer.https(httpsProxyPort, proxyFactory, rulesService);
 apiServer(7001, api);
 
 
