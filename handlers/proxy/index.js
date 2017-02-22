@@ -7,6 +7,7 @@ const url = require('url');
 
 module.exports = function(httpsProxy, log){
 	const app = express();
+	app.disable('x-powered-by');
 	//
 	// const router=express.Router();
 	//
