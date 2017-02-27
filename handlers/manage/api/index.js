@@ -1,16 +1,14 @@
 'use strict';
 
 const express = require('express');
+const router = express.Router();
 
 module.exports = function(log){
-	const app = express();
-	app.disable('x-powered-by');
-	
-	app.use(function(req, res, next){
+	router.get('/hello', function(req, res){
 		log.info('Hello from API.');
 
 		res.send('OK');
 	});
 
-	return app;
+	return router;
 };

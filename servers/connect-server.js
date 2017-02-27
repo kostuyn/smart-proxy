@@ -31,7 +31,7 @@ module.exports = function(port, proxyHost, httpProxyPort, httpsProxyPort) {
 		});
 		
 		clientSocket.on('error', function(e) {
-			console.error('socket error', e);
+			log.error('socket error', e);
 		});
 	}
 };

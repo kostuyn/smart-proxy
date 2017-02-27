@@ -4,8 +4,8 @@ const serverFactory = require('./server-factory');
 
 const log = console;
 
-module.exports = function(port, apiFactory){
-	const api = apiFactory(log);
+module.exports = function(port, manageFactory){
+	const manage = manageFactory(log);
 	const server = serverFactory.listenHttp(port, log);
-	server.on('request', api);
+	server.on('request', manage);
 };
