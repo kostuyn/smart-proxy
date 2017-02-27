@@ -2,7 +2,12 @@
   {
     "method": "get",
     "path": "/_api/searching/startSync2",
-    "statusCode": 400
+    "statusCode": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "Custom-Header": "custom value"
+    },
+    "content": "{\"hello\":\"world\"}"
   },
   {
     "method": "get",

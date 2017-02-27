@@ -8,9 +8,10 @@ module.exports = function(httpsProxy, rulesService, log) {
 	const app = express();
 
 	app.disable('x-powered-by');
+	app.disable('etag');
 
 	app.use(function(req, res, next) {
-		const rules = rulesService.getAll();		
+		const rules = rulesService.getAll();
 
 		for(let i = 0; i < rules.length; i++) {
 			const rule = rules[i];
@@ -21,9 +22,10 @@ module.exports = function(httpsProxy, rulesService, log) {
 			const params = rule.route.match(pathName);
 			if(params) {
 				log.info('apply rule:', rule.data);
-				res.setHeader('X-Proxy-Response', true);
+				const headers = Object.assign({'X-Proxy-Response': true}, rule.data.headers);
+				res.set(headers);
 				res.status(rule.data.statusCode);
-				return res.send();
+				return res.send(rule.data.content);
 			}
 		}
 
