@@ -1,6 +1,6 @@
 [
   {
-    "method": "get",
+    "method": "GET",
     "path": "/_api/searching/startSync2",
     "statusCode": 200,
     "headers": {
@@ -10,7 +10,7 @@
     "content": "{\"hello\":\"world\"}"
   },
   {
-    "method": "get",
+    "method": "GET",
     "path": "/packages/api/searchPolling",
     "statusCode": 400
   }

@@ -3,11 +3,16 @@
 const express = require('express');
 const router = express.Router();
 
-module.exports = function(log){
-	router.get('/hello', function(req, res){
-		log.info('Hello from API.');
+module.exports = function(rulesService, log){
+	router.get('/rules', function(req, res){
+		const rules = rulesService.getAll();
+		res.send(rules);
+	});
 
-		res.send('OK');
+	router.post('/rules', function(req, res) {
+		log.info('Add rule:', req.body);
+		rulesService.add(req.body.data);
+		res.send();
 	});
 
 	return router;

@@ -28,6 +28,18 @@ class Store {
 		return this._rulesArr;
 	}
 
+	add(ruleData){
+		const index = this._rulesArr.length;
+		const rule = {
+			id: index,
+			route: new Route(ruleData.path),
+			data: ruleData
+		};
+
+		this._rules[index] = rule;
+		this._rulesArr.unshift(rule);
+	}
+
 	edit(id, params) {
 
 	}

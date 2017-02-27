@@ -18,7 +18,7 @@ const httpsProxyPort = 9002;
 connectServer(8001, 'localhost', httpProxyPort, httpsProxyPort);
 proxyServer.http(httpProxyPort, proxyFactory, rulesService);
 proxyServer.https(httpsProxyPort, proxyFactory, rulesService);
-manageServer(7001, manage);
+manageServer(7001, manage, rulesService);
 
 
 const request = require('request');
