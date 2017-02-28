@@ -3,20 +3,20 @@
 window.ee = new EventEmitter();
 
 var UploadForm = React.createClass({
-	onSelectFile: function(e){
+	onSelectFile: function(e) {
 		this.setState({
 			file: e.target.files[0]
 		});
 	},
-	onUpload: function(e){
+	onUpload: function(e) {
 		ee.emit('uploadRules', this.state.file);
 	},
-	render: function(){
+	render: function() {
 		return (
 			<div>
 				<div>
 					<label>Upload</label>
-					<input onChange={this.onSelectFile} ref="file" type="file" />
+					<input onChange={this.onSelectFile} ref="file" type="file"/>
 				</div>
 				<div>
 					<button onClick={this.onUpload}>Upload</button>
@@ -30,7 +30,7 @@ var RulesList = React.createClass({
 	render: function() {
 		var rulesTemplate = this.props.rules.map(function(rule) {
 			return (
-				<li key={rule.id}>{rule.data.method} {rule.data.path} {rule.data.statusCode}</li>
+				<li key={rule.id}>{rule.method} {rule.path} {rule.statusCode}</li>
 			);
 		});
 
@@ -113,23 +113,23 @@ var RuleForm = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
-		return {rules: []};
+		return {config: {rules: []}};
 	},
 	componentDidMount: function() {
 		var self = this;
-		window.ee.on('uploadRules', function(file){
+		window.ee.on('uploadRules', function(file) {
 			console.log(file);
 			fetch('/api/upload', {
 				method: 'POST',
 				body: file
 			}).then(function(response) {
 				return response.json();
-			}).then(function(body){
-				console.log(body);
+			}).then(function(config) {
+				console.log(config);
 				self.setState({
-					rules: body
+					config: config
 				});
-			}).catch(function(err){
+			}).catch(function(err) {
 				console.log(err);
 			});
 		});
@@ -140,11 +140,15 @@ var App = React.createClass({
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(rule)
-			}).then(function(res){
+			}).then(function(response) {
+				return response.json();
+			}).then(function(rule) {
 				self.setState({
-					rules: [rule].concat(self.state.rules)
+					config: {
+						rules: [rule].concat(self.state.config.rules)
+					}
 				});
-			}).catch(function(err){
+			}).catch(function(err) {
 				console.log(err);
 			});
 		});
@@ -152,19 +156,19 @@ var App = React.createClass({
 			.then(function(response) {
 				return response.json();
 			})
-			.then(function(body) {
-				self.setState({rules: body});
+			.then(function(config) {
+				self.setState({config: config});
 			});
 	},
 	render: function() {
-		var rules = this.state.rules;
+		var rules = this.state.config.rules;
 		return (
 			<div>
 				<h3>Proxy</h3>
 				<a href="/api/download">download</a>
 				<UploadForm />
 				<RuleForm />
-				<RulesList rules={rules} />
+				<RulesList rules={rules}/>
 			</div>
 		);
 	}

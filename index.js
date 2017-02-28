@@ -7,18 +7,18 @@ const proxyServer = require('./servers/proxy-server');
 const manageServer = require('./servers/manage-server');
 
 const config = require('./config.json');
-const rulesFactory = require('./services/rules');
+const configServiceFactory = require('./services/config');
 
-const rulesService = rulesFactory();
-rulesService.load(config);
+const configService = configServiceFactory();
+configService.load(config);
 
 const httpProxyPort = 9001;
 const httpsProxyPort = 9002;
 
 connectServer(8001, 'localhost', httpProxyPort, httpsProxyPort);
-proxyServer.http(httpProxyPort, proxyFactory, rulesService);
-proxyServer.https(httpsProxyPort, proxyFactory, rulesService);
-manageServer(7001, manage, rulesService);
+proxyServer.http(httpProxyPort, proxyFactory, configService);
+proxyServer.https(httpsProxyPort, proxyFactory, configService);
+manageServer(7001, manage, configService);
 
 
 const request = require('request');

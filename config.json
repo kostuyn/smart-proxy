@@ -1,17 +1,20 @@
-[
-  {
-    "method": "GET",
-    "path": "/_api/searching/startSync2",
-    "statusCode": 200,
-    "headers": {
-      "Content-Type": "application/json",
-      "Custom-Header": "custom value"
+{
+  "title": "test config",
+  "rules": [
+    {
+      "method": "GET",
+      "path": "/_api/searching/startSync2",
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json",
+        "Custom-Header": "custom value"
+      },
+      "content": "{\"hello\":\"world\"}"
     },
-    "content": "{\"hello\":\"world\"}"
-  },
-  {
-    "method": "GET",
-    "path": "/packages/api/searchPolling",
-    "statusCode": 400
-  }
-]
+    {
+      "method": "GET",
+      "path": "/packages/api/searchPolling",
+      "statusCode": 400
+    }
+  ]
+}
