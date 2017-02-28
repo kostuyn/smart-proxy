@@ -9,53 +9,76 @@ var UploadForm = React.createClass({
 		});
 	},
 	onUpload: function(e) {
+		e.preventDefault();
 		ee.emit('uploadRules', this.state.file);
 	},
 	render: function() {
 		return (
-			<div>
-				<div>
-					<label>Upload</label>
-					<input onChange={this.onSelectFile} ref="file" type="file"/>
+			<form className="panel panel-primary">
+				<div className="panel-heading">
+					<h4 class="panel-title">Upload config</h4>
 				</div>
-				<div>
-					<button onClick={this.onUpload}>Upload</button>
+				<div className="panel-body">
+					<div className="form-group">
+						<input onChange={this.onSelectFile} ref="file" type="file"
+						       className="form-control"/>
+					</div>
+					<button onClick={this.onUpload} className="btn btn-success pull-right">Upload
+					</button>
 				</div>
-			</div>
+			</form>
 		);
 	}
 });
 
 var RuleElement = React.createClass({
-	onRemove: function(e){
+	onRemove: function(e) {
 		window.ee.emit('removeRule', this.props.rule.id);
 	},
 	render: function() {
 		var rule = this.props.rule;
+		var index = this.props.index;
 		return (
-			<div>
-				<span>{rule.method} {rule.path} {rule.statusCode}</span>
-				<button onClick={this.onRemove}>Remove</button>
-			</div>
+			<tr>
+				<td>{index}</td>
+				<td>{rule.method}</td>
+				<td>{rule.path}</td>
+				<td>{rule.statusCode}</td>
+				<td>
+					<button onClick={this.onRemove} className="btn btn-danger">Remove</button>
+				</td>
+			</tr>
 		);
 	}
 });
 
 var RulesList = React.createClass({
 	render: function() {
-		var rulesElements = this.props.rules.map(function(rule) {
+		var rulesElements = this.props.rules.map(function(rule, index) {
 			return (
-				<li key={rule.id}>
-					<RuleElement rule={rule}/>
-				</li>
+				<RuleElement rule={rule} index={index+1}/>
 			);
 		});
 
 		return (
-			<div>
-				<ul>
-					{rulesElements}
-				</ul>
+			<div className="panel panel-primary">
+				<div className="panel-heading">
+					<h4 class="panel-title">Rules list</h4>
+				</div>
+				<div className="panel-body">
+					<table className="table table-striped">
+						<thead>
+						<tr>
+							<th>#</th>
+							<th>Method</th>
+							<th>Path</th>
+							<th>StatusCode</th>
+							<th>Action</th>
+						</tr>
+						</thead>
+						<tbody>{rulesElements}</tbody>
+					</table>
+				</div>
 			</div>
 		);
 	}
@@ -73,7 +96,7 @@ var RuleForm = React.createClass({
 		this.setState({pathIsEmpty: !isCorrectVal});
 	},
 	onStatusCodeChange: function(e) {
-		var isCorrectVal = /^\d+$/.test(e.target.value);
+		var isCorrectVal = /^\d{3}$/.test(e.target.value);
 		this.setState({statusCodeIsEmpty: !isCorrectVal});
 	},
 	onAddRule: function(e) {
@@ -102,28 +125,35 @@ var RuleForm = React.createClass({
 	},
 	render: function() {
 		return (
-			<div>
-				<div>
-					<label>Method</label>
-					<select ref="method">
-						<option selected="true">GET</option>
-						<option>POST</option>
-					</select>
+			<form className="panel panel-primary">
+				<div className="panel-heading">
+					<h4 class="panel-title">Add rule</h4>
 				</div>
-				<div>
-					<label>Path</label>
-					<input onChange={this.onPathChange} ref="path"/>
-				</div>
-				<div>
-					<label>StatusCode</label>
-					<input onChange={this.onStatusCodeChange} ref="statusCode"/>
-				</div>
-				<div>
-					<button disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty}
-					        onClick={this.onAddRule}>Add
+				<div className="panel-body">
+					<div className="form-group">
+						<label>Method</label>
+						<select ref="method" className="form-control">
+							<option selected="true">GET</option>
+							<option>POST</option>
+						</select>
+					</div>
+					<div className="form-group">
+						<label>Path</label>
+						<input onChange={this.onPathChange} ref="path" className="form-control"/>
+					</div>
+					<div className="form-group">
+						<label>StatusCode</label>
+						<input onChange={this.onStatusCodeChange} ref="statusCode"
+						       className="form-control"/>
+					</div>
+					<button
+						disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty}
+						onClick={this.onAddRule}
+						className="btn btn-success pull-right">
+						Add
 					</button>
 				</div>
-			</div>
+			</form>
 		);
 	}
 });
@@ -179,8 +209,8 @@ var App = React.createClass({
 			})
 				.then(function() {
 					var rules = [];
-					self.state.config.rules.forEach(function(rule){
-						if(rule.id == id){
+					self.state.config.rules.forEach(function(rule) {
+						if(rule.id == id) {
 							return;
 						}
 
@@ -212,8 +242,11 @@ var App = React.createClass({
 		var rules = this.state.config.rules;
 		return (
 			<div>
-				<h3>Proxy</h3>
-				<a href="/api/download">download</a>
+				<h3>Proxy Server
+					<small className="pull-right"><a href="/api/download">download config</a>
+					</small>
+				</h3>
+
 				<UploadForm />
 				<RuleForm />
 				<RulesList rules={rules}/>
