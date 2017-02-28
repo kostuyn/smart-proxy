@@ -26,18 +26,35 @@ var UploadForm = React.createClass({
 	}
 });
 
+var RuleElement = React.createClass({
+	onRemove: function(e){
+		window.ee.emit('removeRule', this.props.rule.id);
+	},
+	render: function() {
+		var rule = this.props.rule;
+		return (
+			<div>
+				<span>{rule.method} {rule.path} {rule.statusCode}</span>
+				<button onClick={this.onRemove}>Remove</button>
+			</div>
+		);
+	}
+});
+
 var RulesList = React.createClass({
 	render: function() {
-		var rulesTemplate = this.props.rules.map(function(rule) {
+		var rulesElements = this.props.rules.map(function(rule) {
 			return (
-				<li key={rule.id}>{rule.method} {rule.path} {rule.statusCode}</li>
+				<li key={rule.id}>
+					<RuleElement rule={rule}/>
+				</li>
 			);
 		});
 
 		return (
 			<div>
 				<ul>
-					{rulesTemplate}
+					{rulesElements}
 				</ul>
 			</div>
 		);
@@ -118,20 +135,21 @@ var App = React.createClass({
 	componentDidMount: function() {
 		var self = this;
 		window.ee.on('uploadRules', function(file) {
-			console.log(file);
 			fetch('/api/upload', {
 				method: 'POST',
 				body: file
-			}).then(function(response) {
-				return response.json();
-			}).then(function(config) {
-				console.log(config);
-				self.setState({
-					config: config
+			})
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(config) {
+					self.setState({
+						config: config
+					});
+				})
+				.catch(function(err) {
+					console.log(err);
 				});
-			}).catch(function(err) {
-				console.log(err);
-			});
 		});
 		window.ee.on('addRule', function(rule) {
 			fetch('/api/rules', {
@@ -140,17 +158,44 @@ var App = React.createClass({
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(rule)
-			}).then(function(response) {
-				return response.json();
-			}).then(function(rule) {
-				self.setState({
-					config: {
-						rules: [rule].concat(self.state.config.rules)
-					}
+			})
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(rule) {
+					self.setState({
+						config: {
+							rules: [rule].concat(self.state.config.rules)
+						}
+					});
+				})
+				.catch(function(err) {
+					console.log(err);
 				});
-			}).catch(function(err) {
-				console.log(err);
-			});
+		});
+		window.ee.on('removeRule', function(id) {
+			fetch('/api/rules/' + id, {
+				method: 'DELETE'
+			})
+				.then(function() {
+					var rules = [];
+					self.state.config.rules.forEach(function(rule){
+						if(rule.id == id){
+							return;
+						}
+
+						rules.push(rule);
+					});
+
+					self.setState({
+						config: {
+							rules: rules
+						}
+					});
+				})
+				.catch(function(err) {
+					console.log(err);
+				});
 		});
 		fetch('/api/rules')
 			.then(function(response) {
@@ -158,6 +203,9 @@ var App = React.createClass({
 			})
 			.then(function(config) {
 				self.setState({config: config});
+			})
+			.catch(function(err) {
+				console.log(err);
 			});
 	},
 	render: function() {

@@ -1,21 +1,20 @@
 'use strict';
 
+const uuid = require('uuid').v4;
 const _ = require('lodash');
 
 class Store {
 	constructor(){
 		this._config = {rules: {}};
-		this._count = 0;
 	}
 
 	load(config) {
-		const rules = _.reduce(config.rules, function(rules, item, index) {
-			rules[index] = Object.assign({id: index}, item);
+		const rules = _.reduce(config.rules, function(rules, item) {
+			rules[item.id] = item;
 			return rules;
 		}, {});
 
 		this._config = {title: config.title, rules};
-		this._count = config.rules.length;
 	}
 
 	getAllRules() {
@@ -25,25 +24,23 @@ class Store {
 	getConfig(){
 		return {
 			title: this._config.title,
-			rules: _.map(this._config.rules)
+			rules: _.chain(this._config.rules).orderBy('timestamp', ['desc']).value()
 		};
 	}
 
 	add(ruleData){
-		const index = this._count;
-		const rule = Object.assign({id: index}, ruleData);
-		this._config.rules[index] = rule;
-		this._count++;
+		const id = uuid();
+		const timestamp = Date.now();
+
+		const rule = Object.assign({id, timestamp}, ruleData);
+		this._config.rules[id] = rule;
 
 		return rule;
 	}
 
-	edit(id, params) {
-
-	}
-
 	remove(id){
-
+		console.log(this._config);
+		delete this._config.rules[id];
 	}
 }
 

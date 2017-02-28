@@ -6,11 +6,9 @@ const connectServer = require('./servers/connect-server');
 const proxyServer = require('./servers/proxy-server');
 const manageServer = require('./servers/manage-server');
 
-const config = require('./config.json');
 const configServiceFactory = require('./services/config');
 
 const configService = configServiceFactory();
-configService.load(config);
 
 const httpProxyPort = 9001;
 const httpsProxyPort = 9002;
