@@ -5,7 +5,7 @@ const router = express.Router();
 
 module.exports = function(rulesService, log){
 	router.get('/rules', function(req, res){
-		const rules = rulesService.getAll();
+		const rules = rulesService.getRules();
 		res.send(rules);
 	});
 
@@ -20,9 +20,15 @@ module.exports = function(rulesService, log){
 		log.info(req.body);
 
 		rulesService.load(req.body);
-		const rules = rulesService.getAll();
+		const rules = rulesService.getRules();
 		res.send(rules);
 	});
 
+	router.get('/download', function(req, res){
+		const rules = rulesService.getRules();
+		res.attachment('proxy-rules.json');
+		res.send(JSON.stringify(rules, null, '   '));
+	});
 	return router;
 };
+

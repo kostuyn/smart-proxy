@@ -161,6 +161,7 @@ var App = React.createClass({
 		return (
 			<div>
 				<h3>Proxy</h3>
+				<a href="/api/download">download</a>
 				<UploadForm />
 				<RuleForm />
 				<RulesList rules={rules} />

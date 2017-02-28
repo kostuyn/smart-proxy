@@ -6,13 +6,14 @@ const _ = require('lodash');
 class Store {
 	constructor(){
 		this._rules = {};
-		this._rulesArr = {};
+		this._rulesArr = [];
 	}
 
 	load(config) {
 		const self = this;
+		// self._rules = {title: config.title};
 		self._rules = {};
-
+		
 		config.forEach(function(item, index) {
 			self._rules[index] = {
 				id: index,
@@ -28,6 +29,17 @@ class Store {
 		return this._rulesArr;
 	}
 
+	getRules(){
+		return {
+			//title: this._rules.title,
+			rules: this._rulesArr.map(function(item){
+				return {
+					id: item.id,
+					data: item.data
+				};
+			})
+		};
+	}
 	add(ruleData){
 		const index = this._rulesArr.length;
 		const rule = {
