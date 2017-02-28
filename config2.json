@@ -1,0 +1,17 @@
+[
+  {
+    "method": "POST",
+    "path": "/aasdgasdg/ffftt",
+    "statusCode": 400,
+    "headers": {
+      "Content-Type": "application/json",
+      "Custom-Header": "custom value"
+    },
+    "content": "{\"hello\":\"world\"}"
+  },
+  {
+    "method": "GET",
+    "path": "/ddggyhjd/api/6655ded",
+    "statusCode": 404
+  }
+]

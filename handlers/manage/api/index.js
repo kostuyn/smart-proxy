@@ -15,5 +15,14 @@ module.exports = function(rulesService, log){
 		res.send();
 	});
 
+	router.post('/upload', function(req, res){
+		log.info('file:');
+		log.info(req.body);
+
+		rulesService.load(req.body);
+		const rules = rulesService.getAll();
+		res.send(rules);
+	});
+
 	return router;
 };

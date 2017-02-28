@@ -2,6 +2,30 @@
 
 window.ee = new EventEmitter();
 
+var UploadForm = React.createClass({
+	onSelectFile: function(e){
+		this.setState({
+			file: e.target.files[0]
+		});
+	},
+	onUpload: function(e){
+		ee.emit('uploadRules', this.state.file);
+	},
+	render: function(){
+		return (
+			<div>
+				<div>
+					<label>Upload</label>
+					<input onChange={this.onSelectFile} ref="file" type="file" />
+				</div>
+				<div>
+					<button onClick={this.onUpload}>Upload</button>
+				</div>
+			</div>
+		);
+	}
+});
+
 var RulesList = React.createClass({
 	render: function() {
 		var rulesTemplate = this.props.rules.map(function(rule) {
@@ -70,7 +94,7 @@ var RuleForm = React.createClass({
 					</select>
 				</div>
 				<div>
-					<label>Patn</label>
+					<label>Path</label>
 					<input onChange={this.onPathChange} ref="path"/>
 				</div>
 				<div>
@@ -93,6 +117,22 @@ var App = React.createClass({
 	},
 	componentDidMount: function() {
 		var self = this;
+		window.ee.on('uploadRules', function(file){
+			console.log(file);
+			fetch('/api/upload', {
+				method: 'POST',
+				body: file
+			}).then(function(response) {
+				return response.json();
+			}).then(function(body){
+				console.log(body);
+				self.setState({
+					rules: body
+				});
+			}).catch(function(err){
+				console.log(err);
+			});
+		});
 		window.ee.on('addRule', function(rule) {
 			fetch('/api/rules', {
 				method: 'POST',
@@ -101,7 +141,6 @@ var App = React.createClass({
 				},
 				body: JSON.stringify(rule)
 			}).then(function(res){
-				console.log(res);
 				self.setState({
 					rules: [rule].concat(self.state.rules)
 				});
@@ -122,8 +161,9 @@ var App = React.createClass({
 		return (
 			<div>
 				<h3>Proxy</h3>
+				<UploadForm />
 				<RuleForm />
-				<RulesList rules={rules}/>
+				<RulesList rules={rules} />
 			</div>
 		);
 	}
