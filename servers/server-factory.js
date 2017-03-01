@@ -34,10 +34,8 @@ exports.httpProxy = function(log){
 		req.pipe(proxyReq);
 
 		proxyReq.on('error', function(error){
-			log.error('Https proxy', error);
+			log.error('Http proxy', error);
 		});
-
-		res.pipe(process.stdout);
 	}
 };
 
