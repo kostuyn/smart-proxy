@@ -2,11 +2,12 @@
   "name": "proxy-server",
   "version": "0.0.1",
   "dependencies": {
-    "body-parser": "^1.16.1",
-    "express": "^4.14.1",
-    "lodash": "^4.17.4",
-    "request": "^2.79.0",
-    "route-parser": "0.0.5"
+    "body-parser": "1.16.1",
+    "express": "4.14.1",
+    "lodash": "4.17.4",
+    "request": "2.79.0",
+    "route-parser": "0.0.5",
+    "uuid": "3.0.1"
   },
   "scripts": {
     "start": "node index.js"
