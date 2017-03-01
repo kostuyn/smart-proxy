@@ -3,14 +3,33 @@
 window.ee = new EventEmitter();
 
 var UploadForm = React.createClass({
+	getInitialState: function(){
+		return {
+			noFileUpload: true
+		}
+	},
 	onSelectFile: function(e) {
+		var file = e.target.files[0];
+		if(!file){
+			return;
+		}
+
 		this.setState({
-			file: e.target.files[0]
+			file: file,
+			noFileUpload: false
 		});
 	},
 	onUpload: function(e) {
 		e.preventDefault();
+
+		var domFile = ReactDOM.findDOMNode(this.refs.file);
+		domFile.value = '';
+
 		ee.emit('uploadRules', this.state.file);
+
+		this.setState({
+			noFileUpload: true
+		});
 	},
 	render: function() {
 		return (
@@ -20,10 +39,10 @@ var UploadForm = React.createClass({
 				</div>
 				<div className="panel-body">
 					<div className="form-group">
-						<input onChange={this.onSelectFile} ref="file" type="file"
+						<input onChange={this.onSelectFile} ref="file" type="file" accept=".json"
 						       className="form-control"/>
 					</div>
-					<button onClick={this.onUpload} className="btn btn-success pull-right">Upload
+					<button onClick={this.onUpload} disabled={this.state.noFileUpload} className="btn btn-success pull-right">Upload
 					</button>
 				</div>
 			</form>
