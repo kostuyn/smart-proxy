@@ -18,5 +18,5 @@ const configService = configServiceFactory();
 
 connectServer(connectPort, 'localhost', httpProxyPort, httpsProxyPort);
 proxyServer.http(httpProxyPort, proxyFactory, configService);
-proxyServer.htuutps(httpsProxyPort, proxyFactory, configService);
+proxyServer.https(httpsProxyPort, proxyFactory, configService);
 manageServer(managePort, manage, configService);
