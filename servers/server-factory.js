@@ -68,7 +68,8 @@ function _createOptions(req){
 		hostname: hostName,
 		port: port,
 		path: req.url,
-		method: req.method
+		method: req.method,
+		headers: req.headers
 	};
 }
 
