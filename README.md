@@ -39,3 +39,5 @@ request(options, function(err, response){     // do request
 	* params (/mypath/:params/entity)
 	* content
 3. mock server - without proxy
+4. more logs - method, headers, content, etc. (Enable/Disable)
+5. send logs to UI (socket.io)
