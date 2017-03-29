@@ -161,9 +161,19 @@ var RuleForm = React.createClass({
 						<input onChange={this.onPathChange} ref="path" className="form-control"/>
 					</div>
 					<div className="form-group">
-						<label>StatusCode</label>
+						<label>Status Code</label>
 						<input onChange={this.onStatusCodeChange} ref="statusCode"
 						       className="form-control"/>
+					</div>
+
+					<div className="form-group">
+						<label>Headers</label>
+						<HeaderForm></HeaderForm>
+					</div>
+					<div className="form-group">
+						<label>Response Body</label>
+						<textarea onChange={this.onStatusCodeChange} ref="responseBody"
+						       className="form-control vresize" rows="5"></textarea>
 					</div>
 					<button
 						disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty}
@@ -173,6 +183,28 @@ var RuleForm = React.createClass({
 					</button>
 				</div>
 			</form>
+		);
+	}
+});
+
+var HeaderForm = React.createClass({
+	render: function(){
+		return (
+			<div className="form-inline">
+				<div className="form-group">
+					<input onChange={this.onStatusCodeChange} ref="statusCode"
+					       className="form-control" placeholder="Header"/>
+				</div>
+				<div className="form-group">
+					<input onChange={this.onStatusCodeChange} ref="statusCode"
+					       className="form-control" placeholder="Value"/>
+				</div>
+				<div className="form-group">
+					<button className="btn btn-danger">
+						Remove
+					</button>
+				</div>
+			</div>
 		);
 	}
 });

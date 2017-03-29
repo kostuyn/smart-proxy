@@ -1,0 +1,11 @@
+.noresize {
+	resize: none;
+}
+
+.vresize {
+	resize: vertical;
+}
+
+.form-inline .form-group {
+	margin: 0px 10px;
+}
