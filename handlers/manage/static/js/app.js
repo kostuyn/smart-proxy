@@ -110,7 +110,7 @@ var RuleForm = React.createClass({
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
 			headerError: false,
-			headers: [{}],
+			headers: [{name: '', value: ''}],
 			method: 'GET'
 		};
 	},
@@ -132,13 +132,13 @@ var RuleForm = React.createClass({
 		});
 	},
 	onHeaderChange: function(index, name, value) {
-		var headers = _.cloneDeep(this.state.headers);		
-		var headerError = _.some(headers, function(header, i){
+		var headers = _.cloneDeep(this.state.headers);
+		var headerError = _.some(headers, function(header, i) {
 			return header.name == name && index != i;
 		});
-		var error = headerError || _.some(headers, function(header, i){
-			return header.error && index != i;
-		});
+		var error = headerError || _.some(headers, function(header, i) {
+				return header.error && index != i;
+			});
 
 		headers[index] = {name: name, value: value, error: headerError};
 		this.setState({headers: headers, headerError: error});
@@ -150,19 +150,26 @@ var RuleForm = React.createClass({
 	},
 	onHeaderAdd: function() {
 		this.setState({
-			headers: this.state.headers.concat([{}])
+			headers: this.state.headers.concat([{name: '', value: ''}])
 		});
 	},
 	onAddRule: function(e) {
 		e.preventDefault();
 
-		var headers = this.state.headers;
-		console.log(headers);
+		var headers = _.reduce(this.state.headers, function(obj, item) {
+			if(!_.trim(item.name) || !_.trim(item.value)){
+				return obj;
+			}
+
+			obj[item.name] = item.value;
+			return obj;
+		}, {});
 
 		var rule = {
 			data: {
 				method: this.state.method,
 				path: this.state.path,
+				headers: headers,
 				statusCode: this.state.statusCode
 			}
 		};
@@ -171,8 +178,7 @@ var RuleForm = React.createClass({
 			method: 'GET',
 			path: '',
 			statusCode: '',
-			headers: [{}],
-			headerNames: {},
+			headers: [{name: '', value: ''}],
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true
 		});
@@ -180,8 +186,6 @@ var RuleForm = React.createClass({
 		window.ee.emit('addRule', rule);
 	},
 	render: function() {
-		var self = this;
-		console.log(this.state.headers);
 		return (
 			<form className="panel panel-primary">
 				<div className="panel-heading">
@@ -218,7 +222,7 @@ var RuleForm = React.createClass({
 						          className="form-control vresize" rows="5"/>
 					</div>
 					<button
-						disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty}
+						disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty || this.state.headerError}
 						onClick={this.onAddRule}
 						className="btn btn-success pull-right">
 						Add
@@ -258,6 +262,8 @@ var HeaderElement = React.createClass({
 			);
 		}
 
+		console.log('HeaderElement');
+		console.log(this.props.header.name, this.props.header.value);
 		return (
 			<div className="form-inline">
 				<div className={'form-group ' + (this.props.header.error ? 'has-error': '')}>
@@ -294,7 +300,7 @@ var HeadersList = React.createClass({
 				               onHeaderRemove={self.props.onHeaderRemove}
 				               onHeaderAdd={self.props.onHeaderAdd}
 				               disableRemoveButton={self.props.headers.length == 1}
-				               needAddButton={index==self.props.headers.length-1}
+				               needAddButton={index==self.props.headers.length - 1}
 				               header={header}
 				               index={index}/>
 			);
