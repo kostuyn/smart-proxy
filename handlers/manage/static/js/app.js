@@ -111,7 +111,10 @@ var RuleForm = React.createClass({
 			statusCodeIsEmpty: true,
 			headerError: false,
 			headers: [{name: '', value: ''}],
-			method: 'GET'
+			method: 'GET',
+			path: '',
+			statusCode: '',
+			response: '',
 		};
 	},
 	onMethodChange: function(e) {
@@ -129,6 +132,11 @@ var RuleForm = React.createClass({
 		this.setState({
 			statusCode: e.target.value,
 			statusCodeIsEmpty: !isCorrectVal
+		});
+	},
+	onResponseChange: function(e){
+		this.setState({
+			response: e.target.value
 		});
 	},
 	onHeaderChange: function(index, name, value) {
@@ -168,9 +176,10 @@ var RuleForm = React.createClass({
 		var rule = {
 			data: {
 				method: this.state.method,
-				path: this.state.path,
+				path: _.trim(this.state.path),
 				headers: headers,
-				statusCode: this.state.statusCode
+				statusCode: this.state.statusCode,
+				response: this.state.response
 			}
 		};
 
@@ -178,9 +187,11 @@ var RuleForm = React.createClass({
 			method: 'GET',
 			path: '',
 			statusCode: '',
+			response: '',
 			headers: [{name: '', value: ''}],
 			pathIsEmpty: true,
-			statusCodeIsEmpty: true
+			statusCodeIsEmpty: true,
+			headerError: false
 		});
 
 		window.ee.emit('addRule', rule);
@@ -218,7 +229,7 @@ var RuleForm = React.createClass({
 					             headers={this.state.headers}/>
 					<div className="form-group">
 						<label>Response Body</label>
-						<textarea onChange={this.onStatusCodeChange} ref="responseBody"
+						<textarea onChange={this.onResponseChange} value={this.state.response}
 						          className="form-control vresize" rows="5"/>
 					</div>
 					<button
@@ -262,8 +273,6 @@ var HeaderElement = React.createClass({
 			);
 		}
 
-		console.log('HeaderElement');
-		console.log(this.props.header.name, this.props.header.value);
 		return (
 			<div className="form-inline">
 				<div className={'form-group ' + (this.props.header.error ? 'has-error': '')}>
