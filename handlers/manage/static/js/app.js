@@ -132,11 +132,14 @@ var RuleForm = React.createClass({
 		});
 	},
 	onHeaderChange: function(index, name, value) {
-		var headers = _.cloneDeep(this.state.headers);
-		//TODO: check by index
-		var headerError = _.chain(this.state.headers).map('name').includes(name).value();
-		var error = _.some(this.state.headers, 'error');
-console.error('headerError: ', headerError, 'error: ', error);
+		var headers = _.cloneDeep(this.state.headers);		
+		var headerError = _.some(headers, function(header, i){
+			return header.name == name && index != i;
+		});
+		var error = headerError || _.some(headers, function(header, i){
+			return header.error && index != i;
+		});
+
 		headers[index] = {name: name, value: value, error: headerError};
 		this.setState({headers: headers, headerError: error});
 	},
@@ -267,6 +270,7 @@ var HeaderElement = React.createClass({
 				</div>
 				<div className="form-group">
 					<button onClick={this.onRemove}
+					        disabled={this.props.disableRemoveButton}
 					        type="button"
 					        className="btn btn-danger">
 						Remove
@@ -289,6 +293,7 @@ var HeadersList = React.createClass({
 				<HeaderElement onHeaderChange={self.onHeaderChange}
 				               onHeaderRemove={self.props.onHeaderRemove}
 				               onHeaderAdd={self.props.onHeaderAdd}
+				               disableRemoveButton={self.props.headers.length == 1}
 				               needAddButton={index==self.props.headers.length-1}
 				               header={header}
 				               index={index}/>
