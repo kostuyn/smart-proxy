@@ -27,7 +27,7 @@ module.exports = function(httpsProxy, configService, log) {
 				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
 				res.set(headers);
 				res.status(rule.statusCode);
-				return res.send(rule.content);
+				return res.send(rule.response); // TODO: array of responses
 			}
 		}
 
