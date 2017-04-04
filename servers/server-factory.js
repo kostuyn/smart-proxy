@@ -23,12 +23,15 @@ exports.listenHttps = function(port, options, log){
 };
 
 exports.httpProxy = function(log){
-	return function(req, res) {
+	return function(req, res, callback) {
+		callback = callback || function(){};
+		
 		const options = _createOptions(req);
 
 		const proxyReq = http.request(options, function (response) {
 			res.writeHead(response.statusCode, response.headers);
 			response.pipe(res);
+			callback(null, response);
 		});
 
 		req.pipe(proxyReq);
@@ -40,12 +43,14 @@ exports.httpProxy = function(log){
 };
 
 exports.httpsProxy = function(log){
-	return function(req, res) {
+	return function(req, res, callback) {
+		callback = callback || function(){};
 		const options = _createOptions(req);
 
 		const proxyReq = https.request(options, function (response) {
 			res.writeHead(response.statusCode, response.headers);
 			response.pipe(res);
+			callback(null, response);
 		});
 
 		req.pipe(proxyReq);

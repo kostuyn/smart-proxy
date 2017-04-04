@@ -5,20 +5,23 @@ const net = require('net');
 const url = require('url');
 const Route = require('route-parser');
 
-module.exports = function(httpsProxy, configService, log) {
+module.exports = function(proxy, configService, log) {
 	const app = express();
 
 	app.disable('x-powered-by');
 	app.disable('etag');
 
 	app.use(function(req, res, next) {
+		if(configService.mode != configService.modes.PROXY){
+			return next();
+		}
+
+		const parsedUrl = url.parse(req.url);
+		const pathName = parsedUrl.pathname.replace(/\/$/, "");
 		const rules = configService.getAllRules();
 
 		for(let i = 0; i < rules.length; i++) {
 			const rule = rules[i];
-
-			const parsedUrl = url.parse(req.url);
-			const pathName = parsedUrl.pathname.replace(/\/$/, "");
 
 			const route = new Route(rule.path);
 			const params = route.match(pathName);
@@ -35,9 +38,19 @@ module.exports = function(httpsProxy, configService, log) {
 	});
 
 	app.use(function(req, res, next) {
-		log.info('Hello from Proxy.');
+		if(configService.mode != configService.modes.PROXY){
+			return next();
+		}
 
-		httpsProxy(req, res);
+		log.info('Hello from Proxy.');
+		proxy(req, res);
+	});
+
+	app.use(function(req, res, next) {
+		log.info('Hello from Capture.');
+		proxy(req, res, function(err, response){
+			// TODO: store response data to config
+		});
 	});
 
 	return app;

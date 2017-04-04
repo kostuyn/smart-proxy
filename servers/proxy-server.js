@@ -19,8 +19,8 @@ exports.https = function(port, proxyFactory, configService){
 		cert: fs.readFileSync(__dirname + '/localhost.cert')
 	};
 
-	const httpProxy = serverFactory.httpsProxy(log);
-	const proxy = proxyFactory(httpProxy, configService, log);
+	const httpsProxy = serverFactory.httpsProxy(log);
+	const proxy = proxyFactory(httpsProxy, configService, log);
 
 	const server = serverFactory.listenHttps(port, options, log);
 	server.on('request', proxy);

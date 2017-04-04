@@ -3,9 +3,17 @@
 const uuid = require('uuid').v4;
 const _ = require('lodash');
 
+const MODES = {
+	PROXY: 'PROXY',
+	CAPTURE: 'CAPTURE',
+	PLAY: 'PLAY',
+	MOCK: 'MOCK'
+};
+
 class Store {
-	constructor(){
-		this._config = {rules: {}};
+	constructor() {
+		this.modes = MODES;
+		this._config = {rules: {}, mode: MODES.PROXY};
 	}
 
 	load(config) {
@@ -21,14 +29,14 @@ class Store {
 		return _.map(this._config.rules);
 	}
 
-	getConfig(){
+	getConfig() {
 		return {
 			title: this._config.title,
 			rules: _.chain(this._config.rules).orderBy('timestamp', ['desc']).value()
 		};
 	}
 
-	add(ruleData){
+	add(ruleData) {
 		const id = uuid();
 		const timestamp = Date.now();
 
@@ -38,12 +46,24 @@ class Store {
 		return rule;
 	}
 
-	remove(id){
+	remove(id) {
 		console.log(this._config);
 		delete this._config.rules[id];
 	}
+
+	startCapture() {
+		this._config.mode = MODES.CAPTURE;
+	}
+
+	stopCapture() {
+		this._config.mode = MODES.PLAY;
+	}
+
+	getMode() {
+		return this._config.mode;
+	}
 }
 
-module.exports = function(){
+module.exports = function() {
 	return new Store();
 };

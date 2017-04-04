@@ -37,6 +37,21 @@ module.exports = function(configService, log){
 		res.attachment('proxy-config.json');
 		res.send(JSON.stringify(config, null, '   '));
 	});
+
+	router.post('/rules/capture', function(req, res){
+		log.info('start capture');
+		
+		configService.startCapture();
+		res.send();
+	});
+
+	router.delete('/rules/capture', function(req, res){
+		log.info('stop capture');
+
+		configService.stopCapture();
+		res.send();
+	});
+
 	return router;
 };
 
