@@ -12,7 +12,7 @@ module.exports = function(proxy, configService, log) {
 	app.disable('etag');
 
 	app.use(function(req, res, next) {
-		if(configService.mode != configService.modes.PROXY){
+		if(configService.mode != configService.modes.PROXY) {
 			return next();
 		}
 
@@ -38,7 +38,7 @@ module.exports = function(proxy, configService, log) {
 	});
 
 	app.use(function(req, res, next) {
-		if(configService.mode != configService.modes.PROXY){
+		if(configService.mode != configService.modes.PROXY) {
 			return next();
 		}
 
@@ -48,8 +48,30 @@ module.exports = function(proxy, configService, log) {
 
 	app.use(function(req, res, next) {
 		log.info('Hello from Capture.');
-		proxy(req, res, function(err, response){
-			// TODO: store response data to config
+		proxy(req, res, function(err, response) {
+			const parsedUrl = url.parse(req.url);
+			const rule = {
+				method: req.method,
+				path: parsedUrl.pathname.replace(/\/$/, ""),
+				statusCode: response.statusCode,
+				headers: response.headers
+			};
+			let body = '';
+			response.on('data', function(chunk) {
+				body += chunk;
+			});
+			response.on('end', function() {
+				rule.response = body;
+
+				//console.log('New rule:', rule);
+
+				configService.add(rule);
+				res.send();
+			});
+			response.on('error', function(err) {
+				log.error('Response error:', err);
+				res.sendStatus(500);
+			});
 		});
 	});
 
