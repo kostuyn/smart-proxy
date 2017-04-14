@@ -12,7 +12,7 @@ module.exports = function(proxy, configService, log) {
 	app.disable('etag');
 
 	app.use(function(req, res, next) {
-		if(configService.mode != configService.modes.PROXY) {
+		if(configService.getMode() != configService.modes.PROXY) {
 			return next();
 		}
 
@@ -38,7 +38,7 @@ module.exports = function(proxy, configService, log) {
 	});
 
 	app.use(function(req, res, next) {
-		if(configService.mode != configService.modes.PROXY) {
+		if(configService.getMode() != configService.modes.PROXY) {
 			return next();
 		}
 
