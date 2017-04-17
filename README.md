@@ -33,7 +33,7 @@ request(options, function(err, response){     // do request
 ```
 
 # TODO
-1. fake content & headers
+1. ~~fake content & headers~~
 2. matching rules by:
 	* query
 	* params (/mypath/:params/entity)
