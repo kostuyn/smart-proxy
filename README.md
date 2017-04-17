@@ -35,9 +35,9 @@ request(options, function(err, response){     // do request
 # TODO
 1. ~~fake content & headers~~
 2. proxy modes
-	* PROXY (return fake or proxy to target)
-	* CAPTURE (write all target response to config)
-	* PLAY (execute every rule only once)
+	* PROXY (return fake response or proxy to target)
+	* CAPTURE (write all target responses to config)
+	* PLAY (execute every rule only once, in series by timestamp)
 	* MOCK (fake server - deirect request without proxying)
 3. matching rules by:
 	* query
