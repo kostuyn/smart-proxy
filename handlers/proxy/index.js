@@ -25,7 +25,7 @@ module.exports = function(proxy, configService, log) {
 
 			const route = new Route(rule.path);
 			const params = route.match(pathName);
-			if(params) {
+			if(params && req.method == rule.method) {
 				log.info('apply rule:', rule);
 				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
 				res.set(headers);
