@@ -34,10 +34,14 @@ request(options, function(err, response){     // do request
 
 # TODO
 1. ~~fake content & headers~~
-2. matching rules by:
+2. proxy modes
+	* PROXY (return fake or proxy to target)
+	* CAPTURE (write all target response to config)
+	* PLAY (execute every rule only once)
+	* MOCK (fake server - deirect request without proxying)
+3. matching rules by:
 	* query
 	* params (/mypath/:params/entity)
 	* content
-3. mock server - without proxy
 4. more logs - method, headers, content, etc. (Enable/Disable)
 5. send logs to UI (socket.io)
