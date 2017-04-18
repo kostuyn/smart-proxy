@@ -24,7 +24,7 @@ module.exports = function(configService, log){
 	});
 
 	router.post('/upload', function(req, res){
-		log.info('config:', req.body);
+		//log.info('config:', req.body); // to large response
 
 		configService.load(req.body);
 		const config = configService.getConfig();

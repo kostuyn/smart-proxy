@@ -28,17 +28,23 @@ var SwitchMode = React.createClass({
 	},
 	render: function() {
 		return (
-			<div className="btn-group pull-right" data-toggle="buttons">
-				<label
-					className={'btn btn-primary ' + (this.state.mode == 'PROXY' ? 'active' : '')}>
-					<input type="radio" name="options" value="PROXY" onChange={this.onSelect}/>
-					PROXY
-				</label>
-				<label
-					className={'btn btn-primary ' + (this.state.mode == 'CAPTURE' ? 'active' : '')}>
-					<input type="radio" name="options" value="CAPTURE" onChange={this.onSelect}/>
-					CAPTURE
-				</label>
+			<div className="panel panel-primary">
+				<div className="panel-body">
+					<div className="btn-group pull-right" data-toggle="buttons">
+						<label
+							className={'btn btn-primary ' + (this.state.mode == 'PROXY' ? 'active' : '')}>
+							<input type="radio" name="options" value="PROXY"
+							       onChange={this.onSelect}/>
+							PROXY
+						</label>
+						<label
+							className={'btn btn-primary ' + (this.state.mode == 'CAPTURE' ? 'active' : '')}>
+							<input type="radio" name="options" value="CAPTURE"
+							       onChange={this.onSelect}/>
+							CAPTURE
+						</label>
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -77,7 +83,7 @@ var UploadForm = React.createClass({
 		return (
 			<form className="panel panel-primary">
 				<div className="panel-heading">
-					<h4 class="panel-title">Upload config</h4>
+					<h4 className="panel-title">Upload config</h4>
 				</div>
 				<div className="panel-body">
 					<div className="form-group">
@@ -126,6 +132,9 @@ var RuleElement = React.createClass({
 });
 
 var RulesList = React.createClass({
+	onRefresh: function() {
+		window.ee.emit('refreshRules');
+	},
 	render: function() {
 		var rulesElements = this.props.rules.map(function(rule, index) {
 			return (
@@ -136,7 +145,16 @@ var RulesList = React.createClass({
 		return (
 			<div className="panel panel-primary">
 				<div className="panel-heading">
-					<h4 class="panel-title">Rules list</h4>
+					<div className="panel-title">
+						<h4>Rules list
+							<small>
+								<button onClick={this.onRefresh}
+								        className="btn btn-success pull-right">
+									Refresh
+								</button>
+							</small>
+						</h4>
+					</div>
 				</div>
 				<div className="panel-body">
 					<table className="table table-striped">
@@ -254,7 +272,7 @@ var RuleForm = React.createClass({
 		return (
 			<form className="panel panel-primary">
 				<div className="panel-heading">
-					<h4 class="panel-title">Add rule</h4>
+					<h4 className="panel-title">Add rule</h4>
 				</div>
 				<div className="panel-body">
 					<div className="form-group">
@@ -453,24 +471,34 @@ var App = React.createClass({
 				},
 				body: JSON.stringify(mode)
 			})
+				.then(function() {
+					return getConfig();
+				})
 				.catch(function(err) {
 					console.log(err);
 				});
 		});
-		fetch('/api/rules')
-			.then(function(response) {
-				return response.json();
-			})
-			.then(function(config) {
-				self.setState({
-					title: config.title,
-					mode: config.mode,
-					rules: config.rules
+		window.ee.on('refreshRules', function() {
+			getConfig();
+		});
+		getConfig();
+
+		function getConfig() {
+			return fetch('/api/rules')
+				.then(function(response) {
+					return response.json();
+				})
+				.then(function(config) {
+					self.setState({
+						title: config.title,
+						mode: config.mode,
+						rules: config.rules
+					});
+				})
+				.catch(function(err) {
+					console.log(err);
 				});
-			})
-			.catch(function(err) {
-				console.log(err);
-			});
+		}
 	},
 	render: function() {
 		return (

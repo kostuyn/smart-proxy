@@ -27,7 +27,7 @@ module.exports = function(proxy, configService, log) {
 			const route = new Route(rule.path);
 			const params = route.match(pathName);
 			if(params && req.method == rule.method) {
-				log.info('apply rule:', rule);
+				log.info('apply rule:', {path: rule.path, method: rule.method});
 				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
 				const preparedHeaders = _.omit(headers, ['transfer-encoding']); // omit 'bad' headers
 				res.set(preparedHeaders);

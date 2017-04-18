@@ -48,7 +48,6 @@ class Store {
 	}
 
 	remove(id) {
-		console.log(this._config);
 		delete this._config.rules[id];
 	}
 
