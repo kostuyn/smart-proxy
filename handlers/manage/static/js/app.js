@@ -98,6 +98,16 @@ var RuleElement = React.createClass({
 		window.ee.emit('removeRule', this.props.rule.id);
 	},
 	render: function() {
+		function prettyStr(str, length) {
+			if(str.length <= length) {
+				return str;
+			}
+
+			var subStr = str.substr(0, length - 1);
+			subStr += '...';
+			return subStr;
+		}
+
 		var rule = this.props.rule;
 		var index = this.props.index;
 		return (
@@ -106,6 +116,7 @@ var RuleElement = React.createClass({
 				<td>{rule.method}</td>
 				<td>{rule.path}</td>
 				<td>{rule.statusCode}</td>
+				<td>{prettyStr(rule.response, 50)}</td>
 				<td>
 					<button onClick={this.onRemove} className="btn btn-danger">Remove</button>
 				</td>
@@ -135,6 +146,7 @@ var RulesList = React.createClass({
 							<th>Method</th>
 							<th>Path</th>
 							<th>StatusCode</th>
+							<th>Body</th>
 							<th>Action</th>
 						</tr>
 						</thead>
