@@ -4,6 +4,7 @@ const express = require('express');
 const net = require('net');
 const url = require('url');
 const Route = require('route-parser');
+const _ = require('lodash');
 
 module.exports = function(proxy, configService, log) {
 	const app = express();
@@ -28,7 +29,8 @@ module.exports = function(proxy, configService, log) {
 			if(params && req.method == rule.method) {
 				log.info('apply rule:', rule);
 				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
-				res.set(headers);
+				const preparedHeaders = _.omit(headers, ['transfer-encoding']); // omit 'bad' headers
+				res.set(preparedHeaders);
 				res.status(rule.statusCode);
 				return res.send(rule.response); // TODO: array of responses
 			}
