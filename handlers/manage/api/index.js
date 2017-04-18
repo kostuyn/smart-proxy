@@ -38,17 +38,10 @@ module.exports = function(configService, log){
 		res.send(JSON.stringify(config, null, '   '));
 	});
 
-	router.post('/rules/capture', function(req, res){
-		log.info('start capture');
+	router.put('/rules/mode', function(req, res){
+		log.info('switch mode to', req.body.mode);
 		
-		configService.startCapture();
-		res.send();
-	});
-
-	router.delete('/rules/capture', function(req, res){
-		log.info('stop capture');
-
-		configService.stopCapture();
+		configService.switchMode(req.body.mode);
 		res.send();
 	});
 

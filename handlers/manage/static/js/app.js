@@ -2,6 +2,48 @@
 
 window.ee = new EventEmitter();
 
+var SwitchMode = React.createClass({
+	getInitialState: function() {
+		return {
+			mode: this.props.mode
+		}
+	},
+	componentWillReceiveProps: function(nextProps) {
+		if(nextProps.mode != this.props.mode) {
+			this.setState({
+				mode: nextProps.mode
+			});
+		}
+	},
+	onSelect: function(e) {
+		var curMode = e.target.value;
+		if(this.state.mode == curMode) {
+			return;
+		}
+
+		this.setState({
+			mode: curMode
+		});
+		window.ee.emit('changeMode', {mode: curMode});
+	},
+	render: function() {
+		return (
+			<div className="btn-group pull-right" data-toggle="buttons">
+				<label
+					className={'btn btn-primary ' + (this.state.mode == 'PROXY' ? 'active' : '')}>
+					<input type="radio" name="options" value="PROXY" onChange={this.onSelect}/>
+					PROXY
+				</label>
+				<label
+					className={'btn btn-primary ' + (this.state.mode == 'CAPTURE' ? 'active' : '')}>
+					<input type="radio" name="options" value="CAPTURE" onChange={this.onSelect}/>
+					CAPTURE
+				</label>
+			</div>
+		);
+	}
+});
+
 var UploadForm = React.createClass({
 	getInitialState: function() {
 		return {
@@ -114,7 +156,7 @@ var RuleForm = React.createClass({
 			method: 'GET',
 			path: '',
 			statusCode: '',
-			response: '',
+			response: ''
 		};
 	},
 	onMethodChange: function(e) {
@@ -134,7 +176,7 @@ var RuleForm = React.createClass({
 			statusCodeIsEmpty: !isCorrectVal
 		});
 	},
-	onResponseChange: function(e){
+	onResponseChange: function(e) {
 		this.setState({
 			response: e.target.value
 		});
@@ -165,7 +207,7 @@ var RuleForm = React.createClass({
 		e.preventDefault();
 
 		var headers = _.reduce(this.state.headers, function(obj, item) {
-			if(!_.trim(item.name) || !_.trim(item.value)){
+			if(!_.trim(item.name) || !_.trim(item.value)) {
 				return obj;
 			}
 
@@ -326,7 +368,7 @@ var HeadersList = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
-		return {config: {rules: []}};
+		return {rules: []};
 	},
 	componentDidMount: function() {
 		var self = this;
@@ -340,7 +382,9 @@ var App = React.createClass({
 				})
 				.then(function(config) {
 					self.setState({
-						config: config
+						title: config.title,
+						mode: config.mode,
+						rules: config.rules
 					});
 				})
 				.catch(function(err) {
@@ -360,9 +404,7 @@ var App = React.createClass({
 				})
 				.then(function(rule) {
 					self.setState({
-						config: {
-							rules: [rule].concat(self.state.config.rules)
-						}
+						rules: [rule].concat(self.state.rules)
 					});
 				})
 				.catch(function(err) {
@@ -375,7 +417,7 @@ var App = React.createClass({
 			})
 				.then(function() {
 					var rules = [];
-					self.state.config.rules.forEach(function(rule) {
+					self.state.rules.forEach(function(rule) {
 						if(rule.id == id) {
 							return;
 						}
@@ -384,11 +426,21 @@ var App = React.createClass({
 					});
 
 					self.setState({
-						config: {
-							rules: rules
-						}
+						rules: rules
 					});
 				})
+				.catch(function(err) {
+					console.log(err);
+				});
+		});
+		window.ee.on('changeMode', function(mode) {
+			fetch('/api/rules/mode', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(mode)
+			})
 				.catch(function(err) {
 					console.log(err);
 				});
@@ -398,24 +450,29 @@ var App = React.createClass({
 				return response.json();
 			})
 			.then(function(config) {
-				self.setState({config: config});
+				self.setState({
+					title: config.title,
+					mode: config.mode,
+					rules: config.rules
+				});
 			})
 			.catch(function(err) {
 				console.log(err);
 			});
 	},
 	render: function() {
-		var rules = this.state.config.rules;
 		return (
 			<div>
 				<h3>Proxy Server
-					<small className="pull-right"><a href="/api/download">download config</a>
+					<small className="pull-right">
+						<a href="/api/download">download config</a>
 					</small>
 				</h3>
 
+				<SwitchMode mode={this.state.mode}/>
 				<UploadForm />
 				<RuleForm />
-				<RulesList rules={rules}/>
+				<RulesList rules={this.state.rules}/>
 			</div>
 		);
 	}

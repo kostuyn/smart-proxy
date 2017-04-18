@@ -22,7 +22,7 @@ class Store {
 			return rules;
 		}, {});
 
-		this._config = {title: config.title, rules};
+		this._config = {title: config.title, mode: config.mode, rules};
 	}
 
 	getAllRules() {
@@ -32,6 +32,7 @@ class Store {
 	getConfig() {
 		return {
 			title: this._config.title,
+			mode: this._config.mode,
 			rules: _.chain(this._config.rules).orderBy('timestamp', ['desc']).value()
 		};
 	}
@@ -51,12 +52,8 @@ class Store {
 		delete this._config.rules[id];
 	}
 
-	startCapture() {
-		this._config.mode = MODES.CAPTURE;
-	}
-
-	stopCapture() {
-		this._config.mode = MODES.PLAY;
+	switchMode(mode){
+		this._config.mode = MODES[mode] || MODES.PROXY;
 	}
 
 	getMode() {
