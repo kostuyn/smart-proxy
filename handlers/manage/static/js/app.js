@@ -103,6 +103,9 @@ var RuleElement = React.createClass({
 	onRemove: function(e) {
 		window.ee.emit('removeRule', this.props.rule.id);
 	},
+	onEdit: function(e) {
+		this.props.onEditRule(this.props.rule);
+	},
 	render: function() {
 		function prettyStr(str, length) {
 			if(str.length <= length) {
@@ -125,6 +128,7 @@ var RuleElement = React.createClass({
 				<td>{prettyStr(rule.response, 50)}</td>
 				<td>
 					<button onClick={this.onRemove} className="btn btn-danger">Remove</button>
+					<button onClick={this.onEdit} className="btn btn-warning">Edit</button>
 				</td>
 			</tr>
 		);
@@ -138,7 +142,9 @@ var RulesList = React.createClass({
 	render: function() {
 		var rulesElements = this.props.rules.map(function(rule, index) {
 			return (
-				<RuleElement rule={rule} index={index+1}/>
+				<RuleElement rule={rule}
+				             index={index+1}
+				             onEditRule={this.props.onEditRule}/>
 			);
 		});
 
@@ -181,32 +187,31 @@ var RuleForm = React.createClass({
 		return {
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
-			headerError: false,
-			headers: [{name: '', value: ''}],
-			method: 'GET',
-			path: '',
-			statusCode: '',
-			response: ''
+			headerError: false
 		};
 	},
 	onMethodChange: function(e) {
-		this.setState({method: e.target.value});
+		this.props.onFieldChange('method', e.target.value);
 	},
 	onPathChange: function(e) {
-		var isCorrectVal = e.target.value.trim().length > 0;
+		var value = e.target.value.trim();
+		var isCorrectVal = value.length > 0;
+
+		this.props.onFieldChange('path', value);
 		this.setState({
-			path: e.target.value,
 			pathIsEmpty: !isCorrectVal
 		});
 	},
 	onStatusCodeChange: function(e) {
 		var isCorrectVal = /^\d{3}$/.test(e.target.value);
+
+		this.props.onFieldChange('statusCode', e.target.value);
 		this.setState({
-			statusCode: e.target.value,
 			statusCodeIsEmpty: !isCorrectVal
 		});
 	},
 	onResponseChange: function(e) {
+		this.props.onFieldChange('response', e.target.value);
 		this.setState({
 			response: e.target.value
 		});
@@ -277,7 +282,7 @@ var RuleForm = React.createClass({
 				<div className="panel-body">
 					<div className="form-group">
 						<label>Method</label>
-						<select onChange={this.onMethodChange} value={this.state.method}
+						<select onChange={this.onMethodChange} value={this.props.method}
 						        ref="method"
 						        className="form-control">
 							<option>GET</option>
@@ -286,22 +291,22 @@ var RuleForm = React.createClass({
 					</div>
 					<div className="form-group">
 						<label>Path</label>
-						<input onChange={this.onPathChange} value={this.state.path} ref="path"
+						<input onChange={this.onPathChange} value={this.props.path} ref="path"
 						       className="form-control"/>
 					</div>
 					<div className="form-group">
 						<label>Status Code</label>
-						<input onChange={this.onStatusCodeChange} value={this.state.statusCode}
+						<input onChange={this.onStatusCodeChange} value={this.props.statusCode}
 						       ref="statusCode"
 						       className="form-control"/>
 					</div>
-					<HeadersList onHeaderChange={this.onHeaderChange}
+					{/* <HeadersList onHeaderChange={this.onHeaderChange}
 					             onHeaderAdd={this.onHeaderAdd}
 					             onHeaderRemove={this.onHeaderRemove}
-					             headers={this.state.headers}/>
+					             headers={this.props.headers}/> */}
 					<div className="form-group">
 						<label>Response Body</label>
-						<textarea onChange={this.onResponseChange} value={this.state.response}
+						<textarea onChange={this.onResponseChange} value={this.props.response}
 						          className="form-control vresize" rows="5"/>
 					</div>
 					<button
@@ -398,10 +403,36 @@ var HeadersList = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
-		return {rules: []};
+		return {
+			rules: [],
+			ruleForm: {
+				headers: [{name: '', value: ''}],
+				method: 'GET',
+				path: '',
+				statusCode: '',
+				response: ''
+			}
+		};
+	},
+	onRuleFormChange: function(fieldName, value) {
+		var newState = _.assign({}, this.state.ruleForm, {[fieldName]: value});
+		this.setState(newState);
+	},
+	onEditRule: function(rule) {
+		var rules = _.filter(this.state.rules, function(item) {
+			return item.id != rule.id;
+		});
+
+		this.setState({
+			rules: rules,
+			ruleForm: rule
+		});
 	},
 	componentDidMount: function() {
 		var self = this;
+		this.onRuleFormChange = this.onRuleFormChange.bind(this);
+		this.onEditRule = this.onEditRule.bind(this);
+
 		window.ee.on('uploadRules', function(file) {
 			fetch('/api/upload', {
 				method: 'POST',
@@ -414,7 +445,14 @@ var App = React.createClass({
 					self.setState({
 						title: config.title,
 						mode: config.mode,
-						rules: config.rules
+						rules: config.rules,
+						ruleForm: {
+							headers: [{name: '', value: ''}],
+							method: 'GET',
+							path: '',
+							statusCode: '',
+							response: ''
+						}
 					});
 				})
 				.catch(function(err) {
@@ -446,17 +484,17 @@ var App = React.createClass({
 				method: 'DELETE'
 			})
 				.then(function() {
-					var rules = [];
-					self.state.rules.forEach(function(rule) {
-						if(rule.id == id) {
-							return;
-						}
+					var rules = _.filter(self.state.rules, function(rule) {
+						return rule.id != id;
+					});
 
-						rules.push(rule);
+					var currentRule = _.find(self.state.rules, function(rule) {
+						return rule.id == id;
 					});
 
 					self.setState({
-						rules: rules
+						rules: rules,
+						currentRule: currentRule
 					});
 				})
 				.catch(function(err) {
@@ -492,7 +530,14 @@ var App = React.createClass({
 					self.setState({
 						title: config.title,
 						mode: config.mode,
-						rules: config.rules
+						rules: config.rules,
+						ruleForm: {
+							headers: [{name: '', value: ''}],
+							method: 'GET',
+							path: '',
+							statusCode: '',
+							response: ''
+						}
 					});
 				})
 				.catch(function(err) {
@@ -511,8 +556,8 @@ var App = React.createClass({
 
 				<SwitchMode mode={this.state.mode}/>
 				<UploadForm />
-				<RuleForm />
-				<RulesList rules={this.state.rules}/>
+				<RuleForm rule={this.state.ruleForm} onFieldChange={this.onRuleFormChange}/>
+				<RulesList rules={this.state.rules} onEditRule={this.onEditRule}/>
 			</div>
 		);
 	}
