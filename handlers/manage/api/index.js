@@ -16,6 +16,13 @@ module.exports = function(configService, log){
 		res.send(rule);
 	});
 
+	router.put('/rules/:id', function(req, res){
+		log.info('delete rule:', req.params.id);
+
+		configService.edit(req.params.id, req.body.rule);
+		res.send();
+	});
+	
 	router.delete('/rules/:id', function(req, res){
 		log.info('delete rule:', req.params.id);
 

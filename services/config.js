@@ -47,6 +47,10 @@ class Store {
 		return rule;
 	}
 
+	edit(id, rule){
+		this._config.rules[id] = rule;
+	}
+
 	remove(id) {
 		delete this._config.rules[id];
 	}

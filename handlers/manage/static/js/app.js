@@ -506,17 +506,14 @@ var App = React.createClass({
 	},
 	onUpdateRule: function(rule) {
 		var self = this;
-		fetch('/api/rules', {
-			method: 'POST',
+		fetch('/api/rules' + rule.id, {
+			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(rule)
 		})
-			.then(function(response) {
-				return response.json();
-			})
-			.then(function(rule) {
+			.then(function() {
 				var index = _.findIndex(this.state.rules, function(item) {
 					return item.id == rule.id;
 				});
