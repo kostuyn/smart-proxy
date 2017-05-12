@@ -120,15 +120,22 @@ var RuleElement = React.createClass({
 		var rule = this.props.rule;
 		var index = this.props.index;
 		return (
-			<tr>
+			<tr className={this.props.rule.isEdit ? 'warning': ''}>
 				<td>{index}</td>
 				<td>{rule.method}</td>
 				<td>{rule.path}</td>
 				<td>{rule.statusCode}</td>
 				<td>{prettyStr(rule.response, 50)}</td>
 				<td>
-					<button onClick={this.onRemove} className="btn btn-danger">Remove</button>
-					<button onClick={this.onEdit} className="btn btn-warning">Edit</button>
+					<button onClick={this.onRemove}
+					        disabled={this.props.rule.isEdit}
+					        className="btn btn-danger">Remove
+					</button>
+					<button onClick={this.onEdit}
+					        disabled={this.props.rule.isEdit}
+					        className='btn btn-warning'>
+						Edit
+					</button>
 				</td>
 			</tr>
 		);
@@ -140,11 +147,12 @@ var RulesList = React.createClass({
 		window.ee.emit('refreshRules');
 	},
 	render: function() {
+		var self = this;
 		var rulesElements = this.props.rules.map(function(rule, index) {
 			return (
 				<RuleElement rule={rule}
 				             index={index+1}
-				             onEditRule={this.props.onEditRule}/>
+				             onEditRule={self.props.onEditRule}/>
 			);
 		});
 
@@ -184,40 +192,39 @@ var RulesList = React.createClass({
 
 var RuleForm = React.createClass({
 	getInitialState: function() {
+		console.log('RuleForm getInitialState');
+		console.log('this.props.rule', this.props.rule, !this.props.rule.path);
 		return {
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
 			headerError: false
 		};
 	},
+	componentWillReceiveProps: function(nextProps) {
+		var statusCodeIsCorrect = /^\d{3}$/.test(nextProps.rule.statusCode);
+		var pathIsEmpty = nextProps.rule.path.length == 0;
+
+		this.setState({
+			pathIsEmpty: pathIsEmpty,
+			statusCodeIsEmpty: !statusCodeIsCorrect
+		});
+	},
 	onMethodChange: function(e) {
 		this.props.onFieldChange('method', e.target.value);
 	},
 	onPathChange: function(e) {
 		var value = e.target.value.trim();
-		var isCorrectVal = value.length > 0;
-
 		this.props.onFieldChange('path', value);
-		this.setState({
-			pathIsEmpty: !isCorrectVal
-		});
 	},
 	onStatusCodeChange: function(e) {
-		var isCorrectVal = /^\d{3}$/.test(e.target.value);
-
 		this.props.onFieldChange('statusCode', e.target.value);
-		this.setState({
-			statusCodeIsEmpty: !isCorrectVal
-		});
 	},
 	onResponseChange: function(e) {
 		this.props.onFieldChange('response', e.target.value);
-		this.setState({
-			response: e.target.value
-		});
 	},
 	onHeaderChange: function(index, name, value) {
-		var headers = _.cloneDeep(this.state.headers);
+		var headers = _.cloneDeep(this.props.rule.headers);
+		console.log(headers);
 		var headerError = _.some(headers, function(header, i) {
 			return header.name == name && index != i;
 		});
@@ -226,22 +233,25 @@ var RuleForm = React.createClass({
 			});
 
 		headers[index] = {name: name, value: value, error: headerError};
-		this.setState({headers: headers, headerError: error});
+
+		this.props.onFieldChange('headers', headers);
+		this.setState({headerError: error});
 	},
 	onHeaderRemove: function(index) {
-		var headers = _.cloneDeep(this.state.headers);
+		var headers = _.cloneDeep(this.props.rule.headers);
 		headers.splice(index, 1);
-		this.setState({headers: headers});
+
+		this.props.onFieldChange('headers', headers);
 	},
 	onHeaderAdd: function() {
-		this.setState({
-			headers: this.state.headers.concat([{name: '', value: ''}])
-		});
+		var headers = this.props.rule.headers.concat([{name: '', value: ''}]);
+		this.props.onFieldChange('headers', headers);
 	},
 	onAddRule: function(e) {
 		e.preventDefault();
+		var ruleForm = this.props.rule;
 
-		var headers = _.reduce(this.state.headers, function(obj, item) {
+		var headers = _.reduce(ruleForm.headers, function(obj, item) {
 			if(!_.trim(item.name) || !_.trim(item.value)) {
 				return obj;
 			}
@@ -251,29 +261,77 @@ var RuleForm = React.createClass({
 		}, {});
 
 		var rule = {
-			data: {
-				method: this.state.method,
-				path: _.trim(this.state.path),
-				headers: headers,
-				statusCode: this.state.statusCode,
-				response: this.state.response
-			}
+			method: ruleForm.method,
+			path: ruleForm.path,
+			headers: headers,
+			statusCode: ruleForm.statusCode,
+			response: ruleForm.response
 		};
 
-		this.setState({
-			method: 'GET',
-			path: '',
-			statusCode: '',
-			response: '',
-			headers: [{name: '', value: ''}],
-			pathIsEmpty: true,
-			statusCodeIsEmpty: true,
-			headerError: false
-		});
+		this.props.onAddRule(rule);
+	},
+	onUpdateRule: function(e) {
+		e.preventDefault();
+		var ruleForm = this.props.rule;
 
-		window.ee.emit('addRule', rule);
+		var headers = _.reduce(ruleForm.headers, function(obj, item) {
+			if(!_.trim(item.name) || !_.trim(item.value)) {
+				return obj;
+			}
+
+			obj[item.name] = item.value;
+			return obj;
+		}, {});
+
+		var rule = {
+			method: ruleForm.method,
+			path: ruleForm.path,
+			headers: headers,
+			statusCode: ruleForm.statusCode,
+			response: ruleForm.response
+		};
+
+		this.props.onUpdateRule(rule);
+	},
+	onCancelEditRule: function(e) {
+		this.props.onCancelEditRule(this.props.rule);
 	},
 	render: function() {
+		console.log('Rule Form RENDER');
+
+		var self = this;
+
+		function getActions(rule) {
+			if(rule.isEdit) {
+				return (
+					<div>
+						<button
+							onClick={self.props.onCancelEditRule}
+							className="btn btn-danger pull-right">
+							Cancel
+						</button>
+						<button
+							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
+							onClick={self.onUpdateRule}
+							className="btn btn-success pull-right">
+							OK
+						</button>
+					</div>
+				);
+			}
+
+			return (
+				<button
+					disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
+					onClick={self.onAddRule}
+					className="btn btn-success pull-right">
+					Add
+				</button>
+			);
+		}
+
+		var actions = getActions(this.props.rule);
+
 		return (
 			<form className="panel panel-primary">
 				<div className="panel-heading">
@@ -282,7 +340,7 @@ var RuleForm = React.createClass({
 				<div className="panel-body">
 					<div className="form-group">
 						<label>Method</label>
-						<select onChange={this.onMethodChange} value={this.props.method}
+						<select onChange={this.onMethodChange} value={this.props.rule.method}
 						        ref="method"
 						        className="form-control">
 							<option>GET</option>
@@ -291,30 +349,25 @@ var RuleForm = React.createClass({
 					</div>
 					<div className="form-group">
 						<label>Path</label>
-						<input onChange={this.onPathChange} value={this.props.path} ref="path"
+						<input onChange={this.onPathChange} value={this.props.rule.path} ref="path"
 						       className="form-control"/>
 					</div>
 					<div className="form-group">
 						<label>Status Code</label>
-						<input onChange={this.onStatusCodeChange} value={this.props.statusCode}
+						<input onChange={this.onStatusCodeChange} value={this.props.rule.statusCode}
 						       ref="statusCode"
 						       className="form-control"/>
 					</div>
-					{/* <HeadersList onHeaderChange={this.onHeaderChange}
+					<HeadersList onHeaderChange={this.onHeaderChange}
 					             onHeaderAdd={this.onHeaderAdd}
 					             onHeaderRemove={this.onHeaderRemove}
-					             headers={this.props.headers}/> */}
+					             headers={this.props.rule.headers}/>
 					<div className="form-group">
 						<label>Response Body</label>
-						<textarea onChange={this.onResponseChange} value={this.props.response}
+						<textarea onChange={this.onResponseChange} value={this.props.rule.response}
 						          className="form-control vresize" rows="5"/>
 					</div>
-					<button
-						disabled={this.state.pathIsEmpty || this.state.statusCodeIsEmpty || this.state.headerError}
-						onClick={this.onAddRule}
-						className="btn btn-success pull-right">
-						Add
-					</button>
+					{actions}
 				</div>
 			</form>
 		);
@@ -403,6 +456,7 @@ var HeadersList = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
+		console.log('App getInitialState');
 		return {
 			rules: [],
 			ruleForm: {
@@ -415,22 +469,122 @@ var App = React.createClass({
 		};
 	},
 	onRuleFormChange: function(fieldName, value) {
-		var newState = _.assign({}, this.state.ruleForm, {[fieldName]: value});
-		this.setState(newState);
-	},
-	onEditRule: function(rule) {
-		var rules = _.filter(this.state.rules, function(item) {
-			return item.id != rule.id;
+		console.log('App:', fieldName, value);
+		var ruleForm = _.assign({}, this.state.ruleForm, {[fieldName]: value});
+		console.log('newState:', ruleForm);
+		this.setState({
+			ruleForm: ruleForm
 		});
+	},
+	onAddRule: function(rule) {
+		var self = this;
+		fetch('/api/rules', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(rule)
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(rule) {
+				self.setState({
+					rules: [rule].concat(self.state.rules),
+					ruleForm: {
+						headers: [{name: '', value: ''}],
+						method: 'GET',
+						path: '',
+						statusCode: '',
+						response: ''
+					}
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	onUpdateRule: function(rule) {
+		var self = this;
+		fetch('/api/rules', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(rule)
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(rule) {
+				var index = _.findIndex(this.state.rules, function(item) {
+					return item.id == rule.id;
+				});
+				var rules = this.state.rules.slice(0, index).concat(rule).concat(this.state.rules.slice(index + 1));
+				self.setState({
+					rules: rules,
+					ruleForm: {
+						headers: [{name: '', value: ''}],
+						method: 'GET',
+						path: '',
+						statusCode: '',
+						response: ''
+					}
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	onCancelEditRule: function(rule) {
+		var index = _.findIndex(this.state.rules, function(item) {
+			return item.id == rule.id;
+		});
+
+		var editRule = _.assign({}, rule, {isEdit: false});
+		var rules = this.state.rules.slice(0, index).concat(editRule).concat(this.state.rules.slice(index + 1));
 
 		this.setState({
 			rules: rules,
-			ruleForm: rule
+			ruleForm: {
+				headers: [{name: '', value: ''}],
+				method: 'GET',
+				path: '',
+				statusCode: '',
+				response: ''
+			}
+		});
+	},
+	onEditRule: function(rule) {
+		var headers = _.map(rule.headers, function(value, key) {
+			var header = {
+				name: key,
+				value: value
+			};
+			return header;
+		});
+
+		var index = _.findIndex(this.state.rules, function(item) {
+			return item.id == rule.id;
+		});
+
+		var editRule = _.assign({}, rule, {isEdit: true});
+		var ruleForm = _.assign({}, editRule, {headers: headers});
+
+		var rules = this.state.rules.slice(0, index).concat(editRule).concat(this.state.rules.slice(index + 1));
+
+		this.setState({
+			rules: rules,
+			ruleForm: ruleForm
 		});
 	},
 	componentDidMount: function() {
 		var self = this;
 		this.onRuleFormChange = this.onRuleFormChange.bind(this);
+		this.onAddRule = this.onAddRule.bind(this);
+		this.onUpdateRule = this.onUpdateRule.bind(this);
+		this.onCancelEditRule = this.onCancelEditRule.bind(this);
+
 		this.onEditRule = this.onEditRule.bind(this);
 
 		window.ee.on('uploadRules', function(file) {
@@ -456,29 +610,29 @@ var App = React.createClass({
 					});
 				})
 				.catch(function(err) {
-					console.log(err);
+					console.error(err);
 				});
 		});
-		window.ee.on('addRule', function(rule) {
-			fetch('/api/rules', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(rule)
-			})
-				.then(function(response) {
-					return response.json();
-				})
-				.then(function(rule) {
-					self.setState({
-						rules: [rule].concat(self.state.rules)
-					});
-				})
-				.catch(function(err) {
-					console.log(err);
-				});
-		});
+		// window.ee.on('addRule', function(rule) {
+		// 	fetch('/api/rules', {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json'
+		// 		},
+		// 		body: JSON.stringify(rule)
+		// 	})
+		// 		.then(function(response) {
+		// 			return response.json();
+		// 		})
+		// 		.then(function(rule) {
+		// 			self.setState({
+		// 				rules: [rule].concat(self.state.rules)
+		// 			});
+		// 		})
+		// 		.catch(function(err) {
+		// 			console.error(err);
+		// 		});
+		// });
 		window.ee.on('removeRule', function(id) {
 			fetch('/api/rules/' + id, {
 				method: 'DELETE'
@@ -488,17 +642,12 @@ var App = React.createClass({
 						return rule.id != id;
 					});
 
-					var currentRule = _.find(self.state.rules, function(rule) {
-						return rule.id == id;
-					});
-
 					self.setState({
-						rules: rules,
-						currentRule: currentRule
+						rules: rules
 					});
 				})
 				.catch(function(err) {
-					console.log(err);
+					console.error(err);
 				});
 		});
 		window.ee.on('changeMode', function(mode) {
@@ -513,7 +662,7 @@ var App = React.createClass({
 					return getConfig();
 				})
 				.catch(function(err) {
-					console.log(err);
+					console.error(err);
 				});
 		});
 		window.ee.on('refreshRules', function() {
@@ -541,11 +690,12 @@ var App = React.createClass({
 					});
 				})
 				.catch(function(err) {
-					console.log(err);
+					console.error(err);
 				});
 		}
 	},
 	render: function() {
+		console.log('App render:', this.state);
 		return (
 			<div>
 				<h3>Proxy Server
@@ -556,8 +706,13 @@ var App = React.createClass({
 
 				<SwitchMode mode={this.state.mode}/>
 				<UploadForm />
-				<RuleForm rule={this.state.ruleForm} onFieldChange={this.onRuleFormChange}/>
-				<RulesList rules={this.state.rules} onEditRule={this.onEditRule}/>
+				<RuleForm rule={this.state.ruleForm}
+				          onFieldChange={this.onRuleFormChange}
+				          onAddRule={this.onAddRule}
+				          onUpdateRule={this.onUpdateRule}
+				          onCancelEditRule={this.onCancelEditRule}/>
+				<RulesList rules={this.state.rules}
+				           onEditRule={this.onEditRule}/>
 			</div>
 		);
 	}

@@ -12,7 +12,7 @@ module.exports = function(configService, log){
 	router.post('/rules', function(req, res) {
 		log.info('Add rule:', req.body);
 
-		const rule = configService.add(req.body.data);
+		const rule = configService.add(req.body);
 		res.send(rule);
 	});
 
