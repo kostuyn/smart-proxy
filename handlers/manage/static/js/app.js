@@ -298,6 +298,7 @@ var RuleForm = React.createClass({
 		this.props.onUpdateRule(rule);
 	},
 	onCancelEditRule: function(e) {
+		console.log('onCancelEditRule', this.props.rule);
 		this.props.onCancelEditRule(this.props.rule);
 	},
 	render: function() {
@@ -310,7 +311,7 @@ var RuleForm = React.createClass({
 				return (
 					<div>
 						<button
-							onClick={self.props.onCancelEditRule}
+							onClick={self.onCancelEditRule}
 							className="btn btn-danger pull-right">
 							Cancel
 						</button>
@@ -537,13 +538,9 @@ var App = React.createClass({
 				console.error(err);
 			});
 	},
-	onCancelEditRule: function(rule) {
-		var index = _.findIndex(this.state.rules, function(item) {
-			return item.id == rule.id;
-		});
-
-		var editRule = _.assign({}, rule, {isEdit: false});
-		var rules = this.state.rules.slice(0, index).concat(editRule).concat(this.state.rules.slice(index + 1));
+	onCancelEditRule: function(ruleForm) {
+		console.log('App onCancelEditRule', ruleForm);
+		var rules = _update(this.state.rules, ruleForm.id, {isEdit: false});
 
 		this.setState({
 			rules: rules,
@@ -565,14 +562,10 @@ var App = React.createClass({
 			return header;
 		});
 
-		var index = _.findIndex(this.state.rules, function(item) {
-			return item.id == rule.id;
-		});
+		var rules = _update(this.state.rules, rule.id, {isEdit: true});
+		rules = _update(rules, this.state.ruleForm.id, {isEdit: false});
 
-		var editRule = _.assign({}, rule, {isEdit: true});
-		var ruleForm = _.assign({}, editRule, {headers: headers});
-
-		var rules = this.state.rules.slice(0, index).concat(editRule).concat(this.state.rules.slice(index + 1));
+		var ruleForm = _.assign({}, rule, {headers: headers, isEdit: true});
 
 		this.setState({
 			rules: rules,
@@ -720,3 +713,20 @@ var App = React.createClass({
 });
 
 ReactDOM.render(<App />, document.getElementById('root'));
+
+function _update(items, id, assignProps){
+	console.log(id);
+	if(!id){
+		return items;
+	}
+
+	var index = _.findIndex(items, function(item) {
+		return item.id == id;
+	});
+
+	var item = items[index];
+
+	var newItem = _.assign({}, item, assignProps);
+
+	return items.slice(0, index).concat(newItem).concat(items.slice(index + 1));
+}
