@@ -298,6 +298,7 @@ var RuleForm = React.createClass({
 		this.props.onUpdateRule(rule);
 	},
 	onCancelEditRule: function(e) {
+		e.preventDefault();
 		console.log('onCancelEditRule', this.props.rule);
 		this.props.onCancelEditRule(this.props.rule);
 	},
@@ -326,12 +327,19 @@ var RuleForm = React.createClass({
 			}
 
 			return (
-				<button
-					disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
-					onClick={self.onAddRule}
-					className="btn btn-success pull-right">
-					Add
-				</button>
+				<div>
+					<button
+						onClick={self.onCancelEditRule}
+						className="btn btn-danger pull-right">
+						Cancel
+					</button>
+					<button
+						disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
+						onClick={self.onAddRule}
+						className="btn btn-success pull-right">
+						Add
+					</button>
+				</div>
 			);
 		}
 
@@ -714,9 +722,9 @@ var App = React.createClass({
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
-function _update(items, id, assignProps){
+function _update(items, id, assignProps) {
 	console.log(id);
-	if(!id){
+	if(!id) {
 		return items;
 	}
 
