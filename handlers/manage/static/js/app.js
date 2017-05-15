@@ -108,6 +108,10 @@ var RuleElement = React.createClass({
 	},
 	render: function() {
 		function prettyStr(str, length) {
+			if(!str) {
+				return;
+			}
+
 			if(str.length <= length) {
 				return str;
 			}
