@@ -265,6 +265,7 @@ var RuleForm = React.createClass({
 		}, {});
 
 		var rule = {
+			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
 			headers: headers,
@@ -288,6 +289,7 @@ var RuleForm = React.createClass({
 		}, {});
 
 		var rule = {
+			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
 			headers: headers,
@@ -519,18 +521,20 @@ var App = React.createClass({
 	},
 	onUpdateRule: function(rule) {
 		var self = this;
-		fetch('/api/rules' + rule.id, {
+
+		fetch('/api/rules/' + rule.id, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(rule)
 		})
-			.then(function() {
-				var index = _.findIndex(this.state.rules, function(item) {
-					return item.id == rule.id;
-				});
-				var rules = this.state.rules.slice(0, index).concat(rule).concat(this.state.rules.slice(index + 1));
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(rule) {
+				var newRule = _.assign({}, rule, {isEdit: false});
+				var rules = _update(self.state.rules, rule.id, newRule);
 				self.setState({
 					rules: rules,
 					ruleForm: {

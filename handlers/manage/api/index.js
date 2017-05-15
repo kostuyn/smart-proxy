@@ -17,10 +17,10 @@ module.exports = function(configService, log){
 	});
 
 	router.put('/rules/:id', function(req, res){
-		log.info('delete rule:', req.params.id);
+		log.info('edit rule:', req.body);
 
-		configService.edit(req.params.id, req.body.rule);
-		res.send();
+		const rule = configService.edit(req.params.id, req.body);
+		res.send(rule);
 	});
 	
 	router.delete('/rules/:id', function(req, res){

@@ -48,7 +48,12 @@ class Store {
 	}
 
 	edit(id, rule){
-		this._config.rules[id] = rule;
+		const oldRule = this._config.rules[id];
+		const newRule = Object.assign({}, oldRule, rule);
+
+		this._config.rules[id] = newRule;
+
+		return newRule;
 	}
 
 	remove(id) {
