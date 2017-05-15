@@ -61,7 +61,10 @@ class Store {
 	}
 
 	switchMode(mode){
-		this._config.mode = MODES[mode] || MODES.PROXY;
+		const modeName = MODES[mode] || MODES.PROXY;
+		this._config.mode = modeName;
+		
+		return modeName;
 	}
 
 	getMode() {

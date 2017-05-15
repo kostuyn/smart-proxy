@@ -1,30 +1,13 @@
 'use strict';
 
-window.ee = new EventEmitter();
-
 var SwitchMode = React.createClass({
-	getInitialState: function() {
-		return {
-			mode: this.props.mode
-		}
-	},
-	componentWillReceiveProps: function(nextProps) {
-		if(nextProps.mode != this.props.mode) {
-			this.setState({
-				mode: nextProps.mode
-			});
-		}
-	},
 	onSelect: function(e) {
 		var curMode = e.target.value;
-		if(this.state.mode == curMode) {
+		if(this.props.mode == curMode) {
 			return;
 		}
 
-		this.setState({
-			mode: curMode
-		});
-		window.ee.emit('changeMode', {mode: curMode});
+		this.props.onChangeMode(curMode);
 	},
 	render: function() {
 		return (
@@ -32,13 +15,13 @@ var SwitchMode = React.createClass({
 				<div className="panel-body">
 					<div className="btn-group pull-right" data-toggle="buttons">
 						<label
-							className={'btn btn-primary ' + (this.state.mode == 'PROXY' ? 'active' : '')}>
+							className={'btn btn-primary ' + (this.props.mode == 'PROXY' ? 'active' : '')}>
 							<input type="radio" name="options" value="PROXY"
 							       onChange={this.onSelect}/>
 							PROXY
 						</label>
 						<label
-							className={'btn btn-primary ' + (this.state.mode == 'CAPTURE' ? 'active' : '')}>
+							className={'btn btn-primary ' + (this.props.mode == 'CAPTURE' ? 'active' : '')}>
 							<input type="radio" name="options" value="CAPTURE"
 							       onChange={this.onSelect}/>
 							CAPTURE
@@ -73,8 +56,7 @@ var UploadForm = React.createClass({
 		var domFile = ReactDOM.findDOMNode(this.refs.file);
 		domFile.value = '';
 
-		ee.emit('uploadRules', this.state.file);
-
+		this.props.onUploadRules(this.state.file);
 		this.setState({
 			noFileUpload: true
 		});
@@ -101,7 +83,7 @@ var UploadForm = React.createClass({
 
 var RuleElement = React.createClass({
 	onRemove: function(e) {
-		window.ee.emit('removeRule', this.props.rule.id);
+		this.props.onRemoveRule(this.props.rule.id);
 	},
 	onEdit: function(e) {
 		this.props.onEditRule(this.props.rule);
@@ -148,7 +130,7 @@ var RuleElement = React.createClass({
 
 var RulesList = React.createClass({
 	onRefresh: function() {
-		window.ee.emit('refreshRules');
+		this.props.onRefreshRules();
 	},
 	render: function() {
 		var self = this;
@@ -156,7 +138,8 @@ var RulesList = React.createClass({
 			return (
 				<RuleElement rule={rule}
 				             index={index+1}
-				             onEditRule={self.props.onEditRule}/>
+				             onEditRule={self.props.onEditRule}
+				             onRemoveRule={self.props.onRemoveRule}/>
 			);
 		});
 
@@ -196,8 +179,6 @@ var RulesList = React.createClass({
 
 var RuleForm = React.createClass({
 	getInitialState: function() {
-		console.log('RuleForm getInitialState');
-		console.log('this.props.rule', this.props.rule, !this.props.rule.path);
 		return {
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
@@ -228,7 +209,6 @@ var RuleForm = React.createClass({
 	},
 	onHeaderChange: function(index, name, value) {
 		var headers = _.cloneDeep(this.props.rule.headers);
-		console.log(headers);
 		var headerError = _.some(headers, function(header, i) {
 			return header.name == name && index != i;
 		});
@@ -301,12 +281,9 @@ var RuleForm = React.createClass({
 	},
 	onCancelEditRule: function(e) {
 		e.preventDefault();
-		console.log('onCancelEditRule', this.props.rule);
 		this.props.onCancelEditRule(this.props.rule);
 	},
 	render: function() {
-		console.log('Rule Form RENDER');
-
 		var self = this;
 
 		function getActions(rule) {
@@ -471,9 +448,9 @@ var HeadersList = React.createClass({
 
 var App = React.createClass({
 	getInitialState: function() {
-		console.log('App getInitialState');
 		return {
 			rules: [],
+			mode: 'PROXY',
 			ruleForm: {
 				headers: [{name: '', value: ''}],
 				method: 'GET',
@@ -484,9 +461,7 @@ var App = React.createClass({
 		};
 	},
 	onRuleFormChange: function(fieldName, value) {
-		console.log('App:', fieldName, value);
 		var ruleForm = _.assign({}, this.state.ruleForm, {[fieldName]: value});
-		console.log('newState:', ruleForm);
 		this.setState({
 			ruleForm: ruleForm
 		});
@@ -551,7 +526,6 @@ var App = React.createClass({
 			});
 	},
 	onCancelEditRule: function(ruleForm) {
-		console.log('App onCancelEditRule', ruleForm);
 		var rules = _update(this.state.rules, ruleForm.id, {isEdit: false});
 
 		this.setState({
@@ -584,124 +558,110 @@ var App = React.createClass({
 			ruleForm: ruleForm
 		});
 	},
-	componentDidMount: function() {
+	onRemoveRule: function(id) {
 		var self = this;
+		fetch('/api/rules/' + id, {
+			method: 'DELETE'
+		})
+			.then(function() {
+				var rules = _.filter(self.state.rules, function(rule) {
+					return rule.id != id;
+				});
+
+				self.setState({
+					rules: rules
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	onUploadRules: function(file) {
+		var self = this;
+		fetch('/api/upload', {
+			method: 'POST',
+			body: file
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(config) {
+				self.setState({
+					title: config.title,
+					mode: config.mode,
+					rules: config.rules,
+					ruleForm: {
+						headers: [{name: '', value: ''}],
+						method: 'GET',
+						path: '',
+						statusCode: '',
+						response: ''
+					}
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	onChangeMode: function(mode) {
+		var self = this;
+		fetch('/api/mode', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({mode: mode})
+		})
+			.then(function() {
+				self.getConfig();
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	onRefreshRules: function() {
+		this.getConfig();
+	},
+	getConfig: function() {
+		var self = this;
+		return fetch('/api/rules')
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(config) {
+				self.setState({
+					title: config.title,
+					mode: config.mode,
+					rules: config.rules,
+					ruleForm: {
+						headers: [{name: '', value: ''}],
+						method: 'GET',
+						path: '',
+						statusCode: '',
+						response: ''
+					}
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
+	componentDidMount: function() {
 		this.onRuleFormChange = this.onRuleFormChange.bind(this);
 		this.onAddRule = this.onAddRule.bind(this);
 		this.onUpdateRule = this.onUpdateRule.bind(this);
 		this.onCancelEditRule = this.onCancelEditRule.bind(this);
 
 		this.onEditRule = this.onEditRule.bind(this);
+		this.onRemoveRule = this.onRemoveRule.bind(this);
+		this.onRefreshRules = this.onRefreshRules.bind(this);
 
-		window.ee.on('uploadRules', function(file) {
-			fetch('/api/upload', {
-				method: 'POST',
-				body: file
-			})
-				.then(function(response) {
-					return response.json();
-				})
-				.then(function(config) {
-					self.setState({
-						title: config.title,
-						mode: config.mode,
-						rules: config.rules,
-						ruleForm: {
-							headers: [{name: '', value: ''}],
-							method: 'GET',
-							path: '',
-							statusCode: '',
-							response: ''
-						}
-					});
-				})
-				.catch(function(err) {
-					console.error(err);
-				});
-		});
-		// window.ee.on('addRule', function(rule) {
-		// 	fetch('/api/rules', {
-		// 		method: 'POST',
-		// 		headers: {
-		// 			'Content-Type': 'application/json'
-		// 		},
-		// 		body: JSON.stringify(rule)
-		// 	})
-		// 		.then(function(response) {
-		// 			return response.json();
-		// 		})
-		// 		.then(function(rule) {
-		// 			self.setState({
-		// 				rules: [rule].concat(self.state.rules)
-		// 			});
-		// 		})
-		// 		.catch(function(err) {
-		// 			console.error(err);
-		// 		});
-		// });
-		window.ee.on('removeRule', function(id) {
-			fetch('/api/rules/' + id, {
-				method: 'DELETE'
-			})
-				.then(function() {
-					var rules = _.filter(self.state.rules, function(rule) {
-						return rule.id != id;
-					});
+		this.onUploadRules = this.onUploadRules.bind(this);
+		this.onChangeMode = this.onChangeMode.bind(this);
 
-					self.setState({
-						rules: rules
-					});
-				})
-				.catch(function(err) {
-					console.error(err);
-				});
-		});
-		window.ee.on('changeMode', function(mode) {
-			fetch('/api/rules/mode', {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(mode)
-			})
-				.then(function() {
-					return getConfig();
-				})
-				.catch(function(err) {
-					console.error(err);
-				});
-		});
-		window.ee.on('refreshRules', function() {
-			getConfig();
-		});
-		getConfig();
-
-		function getConfig() {
-			return fetch('/api/rules')
-				.then(function(response) {
-					return response.json();
-				})
-				.then(function(config) {
-					self.setState({
-						title: config.title,
-						mode: config.mode,
-						rules: config.rules,
-						ruleForm: {
-							headers: [{name: '', value: ''}],
-							method: 'GET',
-							path: '',
-							statusCode: '',
-							response: ''
-						}
-					});
-				})
-				.catch(function(err) {
-					console.error(err);
-				});
-		}
+		this.getConfig();
 	},
 	render: function() {
-		console.log('App render:', this.state);
 		return (
 			<div>
 				<h3>Proxy Server
@@ -710,15 +670,18 @@ var App = React.createClass({
 					</small>
 				</h3>
 
-				<SwitchMode mode={this.state.mode}/>
-				<UploadForm />
+				<SwitchMode onChangeMode={this.onChangeMode}
+				            mode={this.state.mode}/>
+				<UploadForm onUploadRules={this.onUploadRules}/>
 				<RuleForm rule={this.state.ruleForm}
 				          onFieldChange={this.onRuleFormChange}
 				          onAddRule={this.onAddRule}
 				          onUpdateRule={this.onUpdateRule}
 				          onCancelEditRule={this.onCancelEditRule}/>
 				<RulesList rules={this.state.rules}
-				           onEditRule={this.onEditRule}/>
+				           onEditRule={this.onEditRule}
+				           onRemoveRule={this.onRemoveRule}
+				           onRefreshRules={this.onRefreshRules}/>
 			</div>
 		);
 	}
@@ -727,7 +690,6 @@ var App = React.createClass({
 ReactDOM.render(<App />, document.getElementById('root'));
 
 function _update(items, id, assignProps) {
-	console.log(id);
 	if(!id) {
 		return items;
 	}

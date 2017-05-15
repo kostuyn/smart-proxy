@@ -45,11 +45,11 @@ module.exports = function(configService, log){
 		res.send(JSON.stringify(config, null, '   '));
 	});
 
-	router.put('/rules/mode', function(req, res){
+	router.put('/mode', function(req, res){
 		log.info('switch mode to', req.body.mode);
 		
-		configService.switchMode(req.body.mode);
-		res.send();
+		var mode = configService.switchMode(req.body.mode);
+		res.send({mode});
 	});
 
 	return router;
