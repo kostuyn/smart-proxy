@@ -33,15 +33,21 @@ request(options, function(err, response){     // do request
 ```
 
 # TODO
-1. ~~fake content & headers~~
+1. common:
+    * ~~add rule~~
+    * ~~remove rule~~
+    * ~~edit rule~~
+    * ~~fake response & headers~~
 2. proxy modes
 	* ~~PROXY (return fake response or proxy to target)~~
 	* ~~CAPTURE (write all target responses to config)~~
 	* PLAY (execute every rule only once, in series by timestamp)
 	* MOCK (fake server - deirect request without proxying)
 3. matching rules by:
+    * ~~path~~
 	* query
 	* params (/mypath/:params/entity)
 	* content
 4. more logs - method, headers, content, etc. (Enable/Disable)
 5. send logs to UI (socket.io)
+6. socket proxy
