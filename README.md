@@ -15,7 +15,7 @@ Makes fake response by request url or proxies to target url.
 ## Direct mode
 You can do request direct to the Proxy. Set REMOTE_HOST and request ```https://{proxy_host}:{HTTPS_PROXY_PORT}/{path}```
 ```
-HTTPS_PROXY_PORT=myrestapi.com npm start
+REMOTE_HOST=myrestapi.com npm start
 ```
 
 Do request to Smart-Proxy, all requests will proxying to the target REMOTE_HOST or return fake response
