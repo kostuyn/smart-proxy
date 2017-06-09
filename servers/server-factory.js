@@ -43,6 +43,7 @@ exports.httpProxy = function(configService, log) {
 
 		proxyReq.on('error', function(error) {
 			log.error('Http proxy', error);
+			res.status(500).send(error);
 		});
 	}
 };
@@ -67,6 +68,7 @@ exports.httpsProxy = function(configService, log) {
 
 		proxyReq.on('error', function(error) {
 			log.error('Https proxy', error);
+			res.status(500).send(error);
 		});
 	}
 };
@@ -85,7 +87,8 @@ function _createOptions(req, remoteHost) {
 		port: port,
 		path: req.url,
 		method: req.method,
-		headers: Object.assign({}, req.headers, {'host': hostName}) // change 'host' header to hostName
+		headers: Object.assign({}, req.headers, {'host': hostName}), // change 'host' header to hostName
+		rejectUnauthorized: false
 	};
 }
 
