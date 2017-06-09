@@ -12,6 +12,13 @@ Makes fake response by request url or proxies to target url.
 |REMOTE_HOST | undefined | set target remote host (override 'X-Forwarded-Host') |
 
 # How to use
+## Install and run
+```
+git clone https://github.com/kostuyn/smart-proxy.git
+cd smart-proxy
+npm install
+npm start
+```
 ## Direct mode
 You can do request direct to the Proxy. Set REMOTE_HOST and request ```https://{proxy_host}:{HTTPS_PROXY_PORT}/{path}```
 ```
