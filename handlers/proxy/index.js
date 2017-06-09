@@ -65,7 +65,10 @@ module.exports = function(proxy, configService, log) {
 				headers: response.headers
 			};
 
-			const pp = response.pipe(zlib.createUnzip());
+			let pp = response;
+			if(response.headers['content-encoding']) {
+				pp = response.pipe(zlib.createUnzip());
+			}
 
 			let body = '';
 			pp.on('data', function(chunk) {
@@ -81,7 +84,7 @@ module.exports = function(proxy, configService, log) {
 			});
 			pp.on('error', function(err) {
 				log.error('Response error:', err);
-				res.sendStatus(500);
+				//res.sendStatus(500);
 			});
 		});
 	});
