@@ -2,6 +2,7 @@
 
 const http = require('http');
 const https = require('https');
+const _ = require('lodash');
 
 exports.listenHttp = function(port, log) {
 	const server = http.createServer();
@@ -30,6 +31,8 @@ exports.httpProxy = function(configService, log) {
 		const remoteHost = configService.getRemoteHost();
 		const options = _createOptions(req, remoteHost);
 
+		log.info('HTTP PROXY', options.method, options.hostname + ':' + options.port + options.path);
+
 		const proxyReq = http.request(options, function(response) {
 			res.writeHead(response.statusCode, response.headers);
 			response.pipe(res);
@@ -52,7 +55,7 @@ exports.httpsProxy = function(configService, log) {
 		const remoteHost = configService.getRemoteHost();
 		const options = _createOptions(req, remoteHost);
 
-		log.info('PROXY', options.method, options.hostname + ':' + options.port + options.path);
+		log.info('HTTPS PROXY', options.method, options.hostname + ':' + options.port + options.path);
 
 		const proxyReq = https.request(options, function(response) {
 			res.writeHead(response.statusCode, response.headers);
@@ -82,7 +85,7 @@ function _createOptions(req, remoteHost) {
 		port: port,
 		path: req.url,
 		method: req.method,
-		headers: req.headers
+		headers: Object.assign({}, req.headers, {'host': hostName}) // change 'host' header to hostName
 	};
 }
 
