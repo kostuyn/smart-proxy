@@ -56,6 +56,9 @@ Do request to your app, all requests will go through Smart-Proxy
 curl http://myrestapi.com/rest_api_path?foo=bar
 ```
 
+## Management panel
+By link ```http://localhost:7001``` will be available Smart-Proxy management panel
+
 # TODO
 1. common:
     * ~~add rule~~
