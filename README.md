@@ -57,7 +57,7 @@ curl http://myrestapi.com/rest_api_path?foo=bar
 ```
 
 ## Management panel
-By link ```http://localhost:7001``` will be available Smart-Proxy management panel
+Smart-Proxy management panel will be available by link ```http://localhost:7001```
 
 # TODO
 1. common:
