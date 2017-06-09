@@ -9,8 +9,22 @@ Makes fake response by request url or proxies to target url.
 |HTTP_PROXY_PORT | 9001| http sniffer port|
 |HTTPS_PROXY_PORT | 9002| https sniffer port|
 |MANAGE_PORT | 7001| management panel port|
+|REMOTE_HOST | undefined | set target remote host (override 'X-Forwarded-Host') |
 
 # How to use
+## Direct mode
+You can do request direct to the Proxy. Set REMOTE_HOST and request https://{proxy_host}:{HTTPS_PROXY_PORT}/{path}
+```
+HTTPS_PROXY_PORT=myrestapi.com npm start
+```
+
+Do request to Smart-Proxy, all requests will proxying to the target REMOTE_HOST or return fake response
+```
+curl https://localhost:9002/rest_api_path?foo=bar --insecure
+```
+
+## Proxy mode
+You can use Smart-Proxy as proxy. Add this code to your app
 ```
 const request = require('request');
 ...
@@ -30,6 +44,16 @@ request(options, function(err, response){     // do request
   // do enything
 });
 ...
+```
+
+Start Smart-Proxy
+```
+npm start
+```
+
+Do request to your app, all requests will go through Smart-Proxy
+```
+curl http://myrestapi.com/rest_api_path?foo=bar
 ```
 
 # TODO
