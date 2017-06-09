@@ -3,6 +3,9 @@
 const express = require('express');
 const net = require('net');
 const url = require('url');
+const zlib = require('zlib');
+const compression = require('compression');
+
 const Route = require('route-parser');
 const _ = require('lodash');
 
@@ -11,6 +14,8 @@ module.exports = function(proxy, configService, log) {
 
 	app.disable('x-powered-by');
 	app.disable('etag');
+
+	app.use(compression());
 
 	app.use(function(req, res, next) {
 		if(configService.getMode() != configService.modes.PROXY) {
@@ -29,10 +34,11 @@ module.exports = function(proxy, configService, log) {
 			if(params && req.method == rule.method) {
 				log.info('apply rule:', {path: rule.path, method: rule.method});
 				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
-				const preparedHeaders = _.omit(headers, ['transfer-encoding']); // omit 'bad' headers
+				const preparedHeaders = _.omit(headers, ['transfer-encoding', 'content-encoding']); // omit 'bad' headers
 				res.set(preparedHeaders);
 				res.status(rule.statusCode);
-				return res.send(rule.response); // TODO: array of responses
+
+				return res.send(rule.response);
 			}
 		}
 
@@ -58,11 +64,14 @@ module.exports = function(proxy, configService, log) {
 				statusCode: response.statusCode,
 				headers: response.headers
 			};
+
+			const pp = response.pipe(zlib.createUnzip());
+
 			let body = '';
-			response.on('data', function(chunk) {
+			pp.on('data', function(chunk) {
 				body += chunk;
 			});
-			response.on('end', function() {
+			pp.on('end', function() {
 				rule.response = body;
 
 				//console.log('New rule:', rule);
@@ -70,7 +79,7 @@ module.exports = function(proxy, configService, log) {
 				configService.add(rule);
 				res.send();
 			});
-			response.on('error', function(err) {
+			pp.on('error', function(err) {
 				log.error('Response error:', err);
 				res.sendStatus(500);
 			});

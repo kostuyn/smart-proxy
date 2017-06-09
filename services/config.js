@@ -70,6 +70,10 @@ class Store {
 	getMode() {
 		return this._config.mode;
 	}
+
+	getRemoteHost(){
+		return process.env.REMOTE_HOST;
+	}
 }
 
 module.exports = function() {

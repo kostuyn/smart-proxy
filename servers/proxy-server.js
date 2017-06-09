@@ -6,7 +6,7 @@ const serverFactory = require('./server-factory');
 const log = console;
 
 exports.http = function(port, proxyFactory, configService){
-	const httpProxy = serverFactory.httpProxy(log);
+	const httpProxy = serverFactory.httpProxy(configService, log);
 	const proxy = proxyFactory(httpProxy, configService, log);
 	
 	const server = serverFactory.listenHttp(port, log);
@@ -19,7 +19,7 @@ exports.https = function(port, proxyFactory, configService){
 		cert: fs.readFileSync(__dirname + '/localhost.cert')
 	};
 
-	const httpsProxy = serverFactory.httpsProxy(log);
+	const httpsProxy = serverFactory.httpsProxy(configService, log);
 	const proxy = proxyFactory(httpsProxy, configService, log);
 
 	const server = serverFactory.listenHttps(port, options, log);
