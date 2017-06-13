@@ -7,7 +7,8 @@ const MODES = {
 	PROXY: 'PROXY',
 	CAPTURE: 'CAPTURE',
 	PLAY: 'PLAY',
-	MOCK: 'MOCK'
+	MOCK: 'MOCK',
+	DISABLE: 'DISABLE'
 };
 
 class Store {

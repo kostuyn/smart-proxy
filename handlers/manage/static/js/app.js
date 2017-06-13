@@ -26,6 +26,12 @@ var SwitchMode = React.createClass({
 							       onChange={this.onSelect}/>
 							CAPTURE
 						</label>
+						<label
+							className={'btn btn-primary ' + (this.props.mode == 'DISABLE' ? 'active' : '')}>
+							<input type="radio" name="options" value="DISABLE"
+							       onChange={this.onSelect}/>
+							DISABLE
+						</label>
 					</div>
 				</div>
 			</div>
@@ -150,7 +156,9 @@ var RulesList = React.createClass({
 			<div className="panel panel-primary">
 				<div className="panel-heading">
 					<div className="panel-title">
-						<h4>Rules list
+						<h4>
+							<small className="badge">{this.props.mode}</small>
+							Rules list
 							<small>
 								<button onClick={this.onClear}
 								        className="btn btn-danger pull-right">
@@ -705,6 +713,7 @@ var App = React.createClass({
 				          onUpdateRule={this.onUpdateRule}
 				          onCancelEditRule={this.onCancelEditRule}/>
 				<RulesList rules={this.state.rules}
+				           mode={this.state.mode}
 				           onEditRule={this.onEditRule}
 				           onRemoveRule={this.onRemoveRule}
 				           onRefreshRules={this.onRefreshRules}

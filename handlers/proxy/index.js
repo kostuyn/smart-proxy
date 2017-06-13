@@ -18,7 +18,12 @@ module.exports = function(proxy, configService, log) {
 	app.use(compression());
 
 	app.use(function(req, res, next) {
-		if(configService.getMode() != configService.modes.PROXY) {
+		res.locals.mode = configService.getMode();
+		next();
+	});
+
+	app.use(function(req, res, next) {
+		if(res.locals.mode != configService.modes.PROXY) {
 			return next();
 		}
 
@@ -46,7 +51,7 @@ module.exports = function(proxy, configService, log) {
 	});
 
 	app.use(function(req, res, next) {
-		if(configService.getMode() != configService.modes.PROXY) {
+		if(res.locals.mode == configService.modes.CAPTURE) {
 			return next();
 		}
 
