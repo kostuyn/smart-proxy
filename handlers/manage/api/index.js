@@ -16,6 +16,13 @@ module.exports = function(configService, log){
 		res.send(rule);
 	});
 
+	router.delete('/rules', function(req, res) {
+		log.info('Clear rules');
+
+		const rules = configService.clearRules();
+		res.send(rules);
+	});
+
 	router.put('/rules/:id', function(req, res){
 		log.info('edit rule:', req.body);
 

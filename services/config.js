@@ -60,6 +60,11 @@ class Store {
 		delete this._config.rules[id];
 	}
 
+	clearRules(){
+		this._config = Object.assign({}, this._config, {rules: {}});
+		return this.getAllRules();
+	}
+
 	switchMode(mode){
 		const modeName = MODES[mode] || MODES.PROXY;
 		this._config.mode = modeName;

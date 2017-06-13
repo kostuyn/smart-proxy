@@ -132,6 +132,9 @@ var RulesList = React.createClass({
 	onRefresh: function() {
 		this.props.onRefreshRules();
 	},
+	onClear: function(){
+		this.props.onClearRules();
+	},
 	render: function() {
 		var self = this;
 		var rulesElements = this.props.rules.map(function(rule, index) {
@@ -149,6 +152,10 @@ var RulesList = React.createClass({
 					<div className="panel-title">
 						<h4>Rules list
 							<small>
+								<button onClick={this.onClear}
+								        className="btn btn-danger pull-right">
+									Clear
+								</button>
 								<button onClick={this.onRefresh}
 								        className="btn btn-success pull-right">
 									Refresh
@@ -622,6 +629,24 @@ var App = React.createClass({
 	onRefreshRules: function() {
 		this.getConfig();
 	},
+	onClearRules: function(){
+		var self = this;
+
+		fetch('/api/rules/', {
+			method: 'DELETE'
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(rules) {
+				self.setState({
+					rules: rules
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
 	getConfig: function() {
 		var self = this;
 		return fetch('/api/rules')
@@ -655,6 +680,7 @@ var App = React.createClass({
 		this.onEditRule = this.onEditRule.bind(this);
 		this.onRemoveRule = this.onRemoveRule.bind(this);
 		this.onRefreshRules = this.onRefreshRules.bind(this);
+		this.onClearRules = this.onClearRules.bind(this);
 
 		this.onUploadRules = this.onUploadRules.bind(this);
 		this.onChangeMode = this.onChangeMode.bind(this);
@@ -681,7 +707,8 @@ var App = React.createClass({
 				<RulesList rules={this.state.rules}
 				           onEditRule={this.onEditRule}
 				           onRemoveRule={this.onRemoveRule}
-				           onRefreshRules={this.onRefreshRules}/>
+				           onRefreshRules={this.onRefreshRules}
+				           onClearRules={this.onClearRules}/>
 			</div>
 		);
 	}
