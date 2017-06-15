@@ -31,20 +31,28 @@ module.exports = function(proxy, configService, log) {
 		const pathName = parsedUrl.pathname.replace(/\/$/, "");
 		const rules = configService.getAllRules();
 
-		for(let i = 0; i < rules.length; i++) {
-			const rule = rules[i];
-
+		const matchingRules = _.filter(rules, function(rule){
 			const route = new Route(rule.path);
-			const params = route.match(pathName);
-			if(params && req.method == rule.method) {
-				log.info('apply rule:', {path: rule.path, method: rule.method});
-				const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
-				const preparedHeaders = _.omit(headers, ['transfer-encoding', 'content-encoding']); // omit 'bad' headers
-				res.set(preparedHeaders);
-				res.status(rule.statusCode);
+			return route.match(pathName) && req.method == rule.method;
+		});
 
-				return res.send(rule.response);
+		for(let i = 0; i < matchingRules.length; i++) {
+			const rule = matchingRules[i];
+			const nextRule = matchingRules[i+1];
+
+			if(nextRule && rule.count >= nextRule.count){
+				continue;
 			}
+
+			log.info('apply rule:', {path: rule.path, method: rule.method});
+			const headers = Object.assign({'X-Proxy-Response': true}, rule.headers);
+			const preparedHeaders = _.omit(headers, ['transfer-encoding', 'content-encoding']); // omit 'bad' headers
+
+			res.set(preparedHeaders);
+			res.status(rule.statusCode);
+			rule.count++;
+
+			return res.send(rule.response);
 		}
 
 		next();

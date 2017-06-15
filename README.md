@@ -75,7 +75,7 @@ Smart-Proxy management panel will be available by link ```http://localhost:7001`
 2. proxy modes
 	* ~~PROXY (return fake response or proxy to target)~~
 	* ~~CAPTURE (write all target responses to config)~~
-	* PLAY (execute every rule only once, in series by timestamp)
+	* ~~PLAY (execute every rule only once, in series by timestamp)~~
 	* ~~MOCK (fake server - direct request to proxy)~~ NOTE: while via REMOTE_HOST env
 3. matching rules by:
     * ~~path~~
