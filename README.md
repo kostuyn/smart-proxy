@@ -81,7 +81,7 @@ Smart-Proxy management panel will be available by link ```http://localhost:7001`
     * ~~path~~
 	* query
 	* params (/mypath/:params/entity)
-	* content
+	* ~~content~~
 4. more logs - method, headers, content, etc. (Enable/Disable)
 5. send logs to UI (socket.io)
 6. socket proxy

@@ -197,16 +197,29 @@ var RuleForm = React.createClass({
 		return {
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
+			reqBodyError: false,
 			headerError: false
 		};
 	},
 	componentWillReceiveProps: function(nextProps) {
 		var statusCodeIsCorrect = /^\d{3}$/.test(nextProps.rule.statusCode);
 		var pathIsEmpty = nextProps.rule.path.length == 0;
+		var reqBodyIsCorrupt = false;
+
+		var reqBody = nextProps.rule.reqBody || '{}';
+		// var reqBody = nextProps.rule.reqBody;
+		// reqBody = reqBody == '' ? '{}' : reqBody;
+
+		try{
+			 JSON.parse(reqBody);
+		}catch(e){
+			reqBodyIsCorrupt = true;
+		}
 
 		this.setState({
 			pathIsEmpty: pathIsEmpty,
-			statusCodeIsEmpty: !statusCodeIsCorrect
+			statusCodeIsEmpty: !statusCodeIsCorrect,
+			reqBodyIsCorrupt: reqBodyIsCorrupt
 		});
 	},
 	onMethodChange: function(e) {
@@ -215,6 +228,9 @@ var RuleForm = React.createClass({
 	onPathChange: function(e) {
 		var value = e.target.value.trim();
 		this.props.onFieldChange('path', value);
+	},
+	onReqBodyChange: function(e) {
+		this.props.onFieldChange('reqBody', e.target.value);
 	},
 	onStatusCodeChange: function(e) {
 		this.props.onFieldChange('statusCode', e.target.value);
@@ -263,6 +279,7 @@ var RuleForm = React.createClass({
 			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
+			reqBody: JSON.parse(ruleForm.reqBody),
 			headers: headers,
 			statusCode: ruleForm.statusCode,
 			response: ruleForm.response
@@ -287,6 +304,7 @@ var RuleForm = React.createClass({
 			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
+			reqBody: JSON.parse(ruleForm.reqBody),
 			headers: headers,
 			statusCode: ruleForm.statusCode,
 			response: ruleForm.response
@@ -311,7 +329,7 @@ var RuleForm = React.createClass({
 							Cancel
 						</button>
 						<button
-							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
+							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
 							onClick={self.onUpdateRule}
 							className="btn btn-success pull-right">
 							OK
@@ -328,7 +346,7 @@ var RuleForm = React.createClass({
 						Cancel
 					</button>
 					<button
-						disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
+						disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
 						onClick={self.onAddRule}
 						className="btn btn-success pull-right">
 						Add
@@ -345,6 +363,7 @@ var RuleForm = React.createClass({
 					<h4 className="panel-title">Add rule</h4>
 				</div>
 				<div className="panel-body">
+					<h4>Request rule</h4>
 					<div className="form-group">
 						<label>Method</label>
 						<select onChange={this.onMethodChange} value={this.props.rule.method}
@@ -359,6 +378,14 @@ var RuleForm = React.createClass({
 						<input onChange={this.onPathChange} value={this.props.rule.path} ref="path"
 						       className="form-control"/>
 					</div>
+					<div className={'form-group ' + (this.state.reqBodyIsCorrupt ? 'has-error': '')}>
+						<label>Request Body</label>
+						<textarea onChange={this.onReqBodyChange} value={this.props.rule.reqBody}
+						          className="form-control vresize" rows="5"/>
+					</div>
+
+					<hr/>
+					<h4>Response rule</h4>
 					<div className="form-group">
 						<label>Status Code</label>
 						<input onChange={this.onStatusCodeChange} value={this.props.rule.statusCode}
@@ -466,13 +493,7 @@ var App = React.createClass({
 		return {
 			rules: [],
 			mode: 'PROXY',
-			ruleForm: {
-				headers: [{name: '', value: ''}],
-				method: 'GET',
-				path: '',
-				statusCode: '',
-				response: ''
-			}
+			ruleForm: this.createRuleForm()
 		};
 	},
 	onRuleFormChange: function(fieldName, value) {
@@ -496,13 +517,7 @@ var App = React.createClass({
 			.then(function(rule) {
 				self.setState({
 					rules: [rule].concat(self.state.rules),
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -527,13 +542,7 @@ var App = React.createClass({
 				var rules = _update(self.state.rules, rule.id, newRule);
 				self.setState({
 					rules: rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -545,13 +554,7 @@ var App = React.createClass({
 
 		this.setState({
 			rules: rules,
-			ruleForm: {
-				headers: [{name: '', value: ''}],
-				method: 'GET',
-				path: '',
-				statusCode: '',
-				response: ''
-			}
+			ruleForm: this.createRuleForm()
 		});
 	},
 	onEditRule: function(rule) {
@@ -563,10 +566,12 @@ var App = React.createClass({
 			return header;
 		});
 
+		var reqBody = JSON.stringify(rule.reqBody) || '';
+
 		var rules = _update(this.state.rules, rule.id, {isEdit: true});
 		rules = _update(rules, this.state.ruleForm.id, {isEdit: false});
 
-		var ruleForm = _.assign({}, rule, {headers: headers, isEdit: true});
+		var ruleForm = _.assign({}, rule, {headers: headers, reqBody: reqBody, isEdit: true});
 
 		this.setState({
 			rules: rules,
@@ -605,13 +610,7 @@ var App = React.createClass({
 					title: config.title,
 					mode: config.mode,
 					rules: config.rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -666,18 +665,22 @@ var App = React.createClass({
 					title: config.title,
 					mode: config.mode,
 					rules: config.rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
 				console.error(err);
 			});
+	},
+	createRuleForm: function(){
+		return {
+			headers: [{name: '', value: ''}],
+			method: 'GET',
+			path: '',
+			reqBody: '',
+			statusCode: '',
+			response: ''
+		};
 	},
 	componentDidMount: function() {
 		this.onRuleFormChange = this.onRuleFormChange.bind(this);
