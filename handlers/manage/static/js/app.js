@@ -302,7 +302,6 @@ var RuleForm = React.createClass({
 		return _
 			.chain(ruleHeaders)
 			.map(function(header) {
-				console.log(header);
 				const error = header.name && counts[header.name] > 1;
 				return Object.assign({}, header, {error: error})
 			})
@@ -558,7 +557,7 @@ var App = React.createClass({
 			return header;
 		});
 
-		var reqBody = JSON.stringify(rule.reqBody) || '';
+		var reqBody = rule.reqBody && JSON.stringify(rule.reqBody);
 
 		var rules = _update(this.state.rules, rule.id, {isEdit: true});
 		rules = _update(rules, this.state.ruleForm.id, {isEdit: false});
