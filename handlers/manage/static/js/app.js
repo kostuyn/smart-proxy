@@ -256,7 +256,12 @@ var RuleForm = React.createClass({
 		var headers = _.cloneDeep(this.props.rule.headers);
 		headers.splice(index, 1);
 
+		var error = _.some(headers, function(header, i) {
+				return header.error;
+			});
+
 		this.props.onFieldChange('headers', headers);
+		this.setState({headerError: error});
 	},
 	onHeaderAdd: function() {
 		var headers = this.props.rule.headers.concat([{name: '', value: ''}]);
@@ -304,7 +309,7 @@ var RuleForm = React.createClass({
 			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
-			reqBody: JSON.parse(ruleForm.reqBody),
+			reqBody: ruleForm.reqBody && JSON.parse(ruleForm.reqBody),
 			headers: headers,
 			statusCode: ruleForm.statusCode,
 			response: ruleForm.response
