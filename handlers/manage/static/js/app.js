@@ -207,8 +207,6 @@ var RuleForm = React.createClass({
 		var reqBodyIsCorrupt = false;
 
 		var reqBody = nextProps.rule.reqBody || '{}';
-		// var reqBody = nextProps.rule.reqBody;
-		// reqBody = reqBody == '' ? '{}' : reqBody;
 
 		try{
 			 JSON.parse(reqBody);
@@ -216,10 +214,15 @@ var RuleForm = React.createClass({
 			reqBodyIsCorrupt = true;
 		}
 
+		var headerError = _.some(nextProps.rule.headers, function(header) {
+			return header.error;
+		});
+
 		this.setState({
 			pathIsEmpty: pathIsEmpty,
 			statusCodeIsEmpty: !statusCodeIsCorrect,
-			reqBodyIsCorrupt: reqBodyIsCorrupt
+			reqBodyIsCorrupt: reqBodyIsCorrupt,
+			headerError: headerError
 		});
 	},
 	onMethodChange: function(e) {
@@ -239,29 +242,18 @@ var RuleForm = React.createClass({
 		this.props.onFieldChange('response', e.target.value);
 	},
 	onHeaderChange: function(index, name, value) {
-		var headers = _.cloneDeep(this.props.rule.headers);
-		var headerError = _.some(headers, function(header, i) {
-			return header.name == name && index != i;
-		});
-		var error = headerError || _.some(headers, function(header, i) {
-				return header.error && index != i;
-			});
+		const ruleHeaders = _.cloneDeep(this.props.rule.headers);
+		ruleHeaders[index] = {name: name, value: value};
 
-		headers[index] = {name: name, value: value, error: headerError};
-
+		var headers = this.prepareHeaders(ruleHeaders);
 		this.props.onFieldChange('headers', headers);
-		this.setState({headerError: error});
 	},
 	onHeaderRemove: function(index) {
-		var headers = _.cloneDeep(this.props.rule.headers);
-		headers.splice(index, 1);
+		var ruleHeaders = _.cloneDeep(this.props.rule.headers);
+		ruleHeaders.splice(index, 1);
 
-		var error = _.some(headers, function(header, i) {
-				return header.error;
-			});
-
+		var headers = this.prepareHeaders(ruleHeaders);
 		this.props.onFieldChange('headers', headers);
-		this.setState({headerError: error});
 	},
 	onHeaderAdd: function() {
 		var headers = this.props.rule.headers.concat([{name: '', value: ''}]);
@@ -271,31 +263,21 @@ var RuleForm = React.createClass({
 		e.preventDefault();
 		var ruleForm = this.props.rule;
 
-		var headers = _.reduce(ruleForm.headers, function(obj, item) {
-			if(!_.trim(item.name) || !_.trim(item.value)) {
-				return obj;
-			}
-
-			obj[item.name] = item.value;
-			return obj;
-		}, {});
-
-		var rule = {
-			id: ruleForm.id,
-			method: ruleForm.method,
-			path: ruleForm.path,
-			reqBody: JSON.parse(ruleForm.reqBody),
-			headers: headers,
-			statusCode: ruleForm.statusCode,
-			response: ruleForm.response
-		};
-
+		var rule = this.ruleMapper(ruleForm);
 		this.props.onAddRule(rule);
 	},
 	onUpdateRule: function(e) {
 		e.preventDefault();
 		var ruleForm = this.props.rule;
 
+		var rule = this.ruleMapper(ruleForm);
+		this.props.onUpdateRule(rule);
+	},
+	onCancelEditRule: function(e) {
+		e.preventDefault();
+		this.props.onCancelEditRule(this.props.rule);
+	},
+	ruleMapper: function(ruleForm){
 		var headers = _.reduce(ruleForm.headers, function(obj, item) {
 			if(!_.trim(item.name) || !_.trim(item.value)) {
 				return obj;
@@ -305,7 +287,7 @@ var RuleForm = React.createClass({
 			return obj;
 		}, {});
 
-		var rule = {
+		return {
 			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
@@ -314,12 +296,17 @@ var RuleForm = React.createClass({
 			statusCode: ruleForm.statusCode,
 			response: ruleForm.response
 		};
-
-		this.props.onUpdateRule(rule);
 	},
-	onCancelEditRule: function(e) {
-		e.preventDefault();
-		this.props.onCancelEditRule(this.props.rule);
+	prepareHeaders: function(ruleHeaders){
+		const counts = _.countBy(ruleHeaders, 'name');
+		return _
+			.chain(ruleHeaders)
+			.map(function(header) {
+				console.log(header);
+				const error = header.name && counts[header.name] > 1;
+				return Object.assign({}, header, {error: error})
+			})
+			.value();
 	},
 	render: function() {
 		var self = this;
