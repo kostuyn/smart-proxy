@@ -556,7 +556,8 @@ var App = React.createClass({
 			};
 			return header;
 		});
-
+		
+		headers = headers.length > 0 ? headers : [{name: '', value: ''}];
 		var reqBody = rule.reqBody && JSON.stringify(rule.reqBody);
 
 		var rules = _update(this.state.rules, rule.id, {isEdit: true});
