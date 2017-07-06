@@ -13,26 +13,30 @@ Makes fake response by request url or proxies to target url.
 
 # How to use
 ## Install and run
-```
+
+```bash
 git clone https://github.com/kostuyn/smart-proxy.git
 cd smart-proxy
 npm install
 npm start
 ```
+
 ## Direct mode
 You can do request direct to the Proxy. Set REMOTE_HOST and request ```https://{proxy_host}:{HTTPS_PROXY_PORT}/{path}```
-```
+
+```bash
 REMOTE_HOST=myrestapi.com npm start
 ```
 
 Do request to Smart-Proxy, all requests will proxying to the target REMOTE_HOST or return fake response
-```
+
+```bash
 curl https://localhost:9002/rest_api_path?foo=bar --insecure
 ```
 
 ## Proxy mode
 You can use Smart-Proxy as proxy. Add this code to your app
-```
+```javascript
 const request = require('request');
 ...
 const options = {url: targetUrl};             // options for request module
@@ -54,12 +58,13 @@ request(options, function(err, response){     // do request
 ```
 
 Start Smart-Proxy
-```
+
+```bash
 npm start
 ```
 
 Do request to your app, all requests will go through Smart-Proxy
-```
+```bash
 curl http://myrestapi.com/rest_api_path?foo=bar
 ```
 
