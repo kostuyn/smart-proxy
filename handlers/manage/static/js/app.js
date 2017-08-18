@@ -362,6 +362,8 @@ var RuleForm = React.createClass({
 						        className="form-control">
 							<option>GET</option>
 							<option>POST</option>
+							<option>PUT</option>
+							<option>DELETE</option>
 						</select>
 					</div>
 					<div className="form-group">
