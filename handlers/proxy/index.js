@@ -107,10 +107,7 @@ module.exports = function(proxy, configService, log) {
 			pp.on('end', function() {
 				rule.response = body;
 
-				//console.log('New rule:', rule);
-
 				configService.add(rule);
-				res.send();
 			});
 			pp.on('error', function(err) {
 				log.error('Response error:', err);
