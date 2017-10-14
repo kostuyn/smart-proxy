@@ -1,3 +1,7 @@
+#root {
+	min-width: 390px;
+}
+
 .noresize {
 	resize: none;
 }
@@ -6,6 +10,74 @@
 	resize: vertical;
 }
 
+.overflow-x {
+	overflow-x: scroll;
+}
+.left-margin {
+	margin-left: 10px;
+}
+.left-margin:first-child {
+	margin-left: 0;
+}
+.right-margin {
+	margin-right: 10px;
+}
+.bottom-margin {
+	margin-bottom: 10px;
+}
+.top-margin {
+	margin-top: 10px;
+}
+
+.left-margin--resp {
+	margin-left: 10px;
+}
+.right-margin--resp {
+	margin-right: 10px;
+}
+.bottom-margin--resp {
+	margin-bottom: 10px;
+}
+.top-margin--resp {
+	margin-top: 10px;
+}
+
+@media (min-width: 992px) {
+	.left-margin--resp {
+		margin-left: 0;
+	}
+	.right-margin--resp {
+		margin-right: 0;
+	}
+	.bottom-margin--resp {
+		margin-bottom: 0;
+	}
+	.top-margin--resp {
+		margin-top: 0;
+	}
+}
+
+.rules {
+	line-height: 34px;
+	font-size: 18px;
+	font-weight: 500;
+}
+
+.rules .btn {
+	vertical-align: top;
+}
+
+.rules .badge {
+	 margin-bottom: 2px;
+}
+
 .form-inline .form-group {
-	margin: 0px 10px;
+	margin-right: 0;
+}
+
+@media (min-width: 768px) {
+	.form-inline .form-group {
+		margin-right: 10px;
+		margin-bottom: 10px;
+	}
 }
