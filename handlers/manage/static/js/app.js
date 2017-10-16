@@ -121,11 +121,11 @@ var RuleElement = React.createClass({
 				<td>
 					<button onClick={this.onRemove}
 					        disabled={this.props.rule.isEdit}
-					        className="btn btn-danger">Remove
+					        className="btn btn-danger  right-margin bottom-margin--resp">Remove
 					</button>
 					<button onClick={this.onEdit}
 					        disabled={this.props.rule.isEdit}
-					        className='btn btn-warning'>
+					        className='btn btn-warning  right-margin bottom-margin--resp'>
 						Edit
 					</button>
 				</td>
@@ -156,23 +156,23 @@ var RulesList = React.createClass({
 			<div className="panel panel-primary">
 				<div className="panel-heading">
 					<div className="panel-title">
-						<h4>
-							<small className="badge">{this.props.mode}</small>
+						<div className="rules">
+							<small className="badge right-margin">{this.props.mode}</small>
 							Rules list
-							<small>
-								<button onClick={this.onClear}
-								        className="btn btn-danger pull-right">
-									Clear
-								</button>
+							<span className="pull-right">
 								<button onClick={this.onRefresh}
-								        className="btn btn-success pull-right">
+								        className="btn btn-success left-margin">
 									Refresh
 								</button>
-							</small>
-						</h4>
+								<button onClick={this.onClear}
+										className="btn btn-danger left-margin">
+									Clear
+								</button>
+							</span>
+						</div>
 					</div>
 				</div>
-				<div className="panel-body">
+				<div className="panel-body overflow-x">
 					<table className="table table-striped">
 						<thead>
 						<tr>
@@ -314,34 +314,38 @@ var RuleForm = React.createClass({
 			if(rule.isEdit) {
 				return (
 					<div>
-						<button
-							onClick={self.onCancelEditRule}
-							className="btn btn-danger pull-right">
-							Cancel
-						</button>
-						<button
-							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
-							onClick={self.onUpdateRule}
-							className="btn btn-success pull-right">
-							OK
-						</button>
+						<span className="pull-right">
+							<button
+								disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
+								onClick={self.onUpdateRule}
+								className="btn btn-success left-margin">
+								OK
+							</button>
+							<button
+								onClick={self.onCancelEditRule}
+								className="btn btn-danger left-margin">
+								Cancel
+							</button>
+						</span>
 					</div>
 				);
 			}
 
 			return (
 				<div>
-					<button
-						onClick={self.onCancelEditRule}
-						className="btn btn-danger pull-right">
-						Cancel
-					</button>
-					<button
-						disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
-						onClick={self.onAddRule}
-						className="btn btn-success pull-right">
-						Add
-					</button>
+					<span className="pull-right">
+						<button
+							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
+							onClick={self.onAddRule}
+							className="btn btn-success left-margin">
+							Add
+						</button>
+						<button
+							onClick={self.onCancelEditRule}
+							className="btn btn-danger left-margin">
+							Cancel
+						</button>
+					</span>
 				</div>
 			);
 		}
@@ -444,7 +448,7 @@ var HeaderElement = React.createClass({
 					<button onClick={this.onRemove}
 					        disabled={this.props.disableRemoveButton}
 					        type="button"
-					        className="btn btn-danger">
+					        className="btn btn-danger  left-margin">
 						Remove
 					</button>
 				</div>
