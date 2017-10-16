@@ -6,8 +6,7 @@ const _ = require('lodash');
 const MODES = {
 	PROXY: 'PROXY',
 	CAPTURE: 'CAPTURE',
-	PLAY: 'PLAY',
-	MOCK: 'MOCK'
+	DISABLE: 'DISABLE'
 };
 
 class Store {
@@ -18,7 +17,7 @@ class Store {
 
 	load(config) {
 		const rules = _.reduce(config.rules, function(rules, item) {
-			rules[item.id] = item;
+			rules[item.id] = Object.assign({}, item, {count: 0});
 			return rules;
 		}, {});
 
@@ -26,7 +25,7 @@ class Store {
 	}
 
 	getAllRules() {
-		return _.map(this._config.rules);
+		return _.chain(this._config.rules).orderBy('timestamp', ['desc']).value();
 	}
 
 	getConfig() {
@@ -41,7 +40,7 @@ class Store {
 		const id = uuid();
 		const timestamp = Date.now();
 
-		const rule = Object.assign({id, timestamp}, ruleData);
+		const rule = Object.assign({id, timestamp, count: 0}, ruleData);
 		this._config.rules[id] = rule;
 
 		return rule;
@@ -60,6 +59,11 @@ class Store {
 		delete this._config.rules[id];
 	}
 
+	clearRules(){
+		this._config = Object.assign({}, this._config, {rules: {}});
+		return this.getAllRules();
+	}
+
 	switchMode(mode){
 		const modeName = MODES[mode] || MODES.PROXY;
 		this._config.mode = modeName;
@@ -69,6 +73,10 @@ class Store {
 
 	getMode() {
 		return this._config.mode;
+	}
+
+	getRemoteHost(){
+		return process.env.REMOTE_HOST;
 	}
 }
 

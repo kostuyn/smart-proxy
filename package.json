@@ -1,15 +1,35 @@
 {
   "name": "proxy-server",
-  "version": "0.0.1",
-  "dependencies": {
-    "body-parser": "1.16.1",
-    "express": "4.14.1",
-    "lodash": "4.17.4",
-    "request": "2.79.0",
-    "route-parser": "0.0.5",
-    "uuid": "3.0.1"
+  "version": "1.0.0",
+  "description": "Smart proxy for testing web apps",
+  "author": "Konstantin Altuhov",
+  "license": "GPL-3.0",  
+  "keywords": [
+    "qa",
+    "testing",
+    "rest api",
+    "webservices",
+    "node.js",
+    "smart-proxy",
+    "proxy",
+    "api"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kostuyn/smart-proxy"
+  },
+  "bugs": {
+    "url": "https://github.com/kostuyn/smart-proxy/issues"
   },
   "scripts": {
     "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "1.17.2",
+    "compression": "1.6.2",
+    "express": "4.14.1",
+    "lodash": "4.17.4",
+    "route-parser": "0.0.5",
+    "uuid": "3.0.1"
   }
 }

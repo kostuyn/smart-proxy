@@ -26,6 +26,12 @@ var SwitchMode = React.createClass({
 							       onChange={this.onSelect}/>
 							CAPTURE
 						</label>
+						<label
+							className={'btn btn-primary ' + (this.props.mode == 'DISABLE' ? 'active' : '')}>
+							<input type="radio" name="options" value="DISABLE"
+							       onChange={this.onSelect}/>
+							DISABLE
+						</label>
 					</div>
 				</div>
 			</div>
@@ -115,11 +121,11 @@ var RuleElement = React.createClass({
 				<td>
 					<button onClick={this.onRemove}
 					        disabled={this.props.rule.isEdit}
-					        className="btn btn-danger">Remove
+					        className="btn btn-danger  right-margin bottom-margin--resp">Remove
 					</button>
 					<button onClick={this.onEdit}
 					        disabled={this.props.rule.isEdit}
-					        className='btn btn-warning'>
+					        className='btn btn-warning  right-margin bottom-margin--resp'>
 						Edit
 					</button>
 				</td>
@@ -131,6 +137,9 @@ var RuleElement = React.createClass({
 var RulesList = React.createClass({
 	onRefresh: function() {
 		this.props.onRefreshRules();
+	},
+	onClear: function(){
+		this.props.onClearRules();
 	},
 	render: function() {
 		var self = this;
@@ -147,17 +156,23 @@ var RulesList = React.createClass({
 			<div className="panel panel-primary">
 				<div className="panel-heading">
 					<div className="panel-title">
-						<h4>Rules list
-							<small>
+						<div className="rules">
+							<small className="badge right-margin">{this.props.mode}</small>
+							Rules list
+							<span className="pull-right">
 								<button onClick={this.onRefresh}
-								        className="btn btn-success pull-right">
+								        className="btn btn-success left-margin">
 									Refresh
 								</button>
-							</small>
-						</h4>
+								<button onClick={this.onClear}
+										className="btn btn-danger left-margin">
+									Clear
+								</button>
+							</span>
+						</div>
 					</div>
 				</div>
-				<div className="panel-body">
+				<div className="panel-body overflow-x">
 					<table className="table table-striped">
 						<thead>
 						<tr>
@@ -182,16 +197,32 @@ var RuleForm = React.createClass({
 		return {
 			pathIsEmpty: true,
 			statusCodeIsEmpty: true,
+			reqBodyError: false,
 			headerError: false
 		};
 	},
 	componentWillReceiveProps: function(nextProps) {
 		var statusCodeIsCorrect = /^\d{3}$/.test(nextProps.rule.statusCode);
 		var pathIsEmpty = nextProps.rule.path.length == 0;
+		var reqBodyIsCorrupt = false;
+
+		var reqBody = nextProps.rule.reqBody || '{}';
+
+		try{
+			 JSON.parse(reqBody);
+		}catch(e){
+			reqBodyIsCorrupt = true;
+		}
+
+		var headerError = _.some(nextProps.rule.headers, function(header) {
+			return header.error;
+		});
 
 		this.setState({
 			pathIsEmpty: pathIsEmpty,
-			statusCodeIsEmpty: !statusCodeIsCorrect
+			statusCodeIsEmpty: !statusCodeIsCorrect,
+			reqBodyIsCorrupt: reqBodyIsCorrupt,
+			headerError: headerError
 		});
 	},
 	onMethodChange: function(e) {
@@ -201,6 +232,9 @@ var RuleForm = React.createClass({
 		var value = e.target.value.trim();
 		this.props.onFieldChange('path', value);
 	},
+	onReqBodyChange: function(e) {
+		this.props.onFieldChange('reqBody', e.target.value);
+	},
 	onStatusCodeChange: function(e) {
 		this.props.onFieldChange('statusCode', e.target.value);
 	},
@@ -208,23 +242,17 @@ var RuleForm = React.createClass({
 		this.props.onFieldChange('response', e.target.value);
 	},
 	onHeaderChange: function(index, name, value) {
-		var headers = _.cloneDeep(this.props.rule.headers);
-		var headerError = _.some(headers, function(header, i) {
-			return header.name == name && index != i;
-		});
-		var error = headerError || _.some(headers, function(header, i) {
-				return header.error && index != i;
-			});
+		const ruleHeaders = _.cloneDeep(this.props.rule.headers);
+		ruleHeaders[index] = {name: name, value: value};
 
-		headers[index] = {name: name, value: value, error: headerError};
-
+		var headers = this.prepareHeaders(ruleHeaders);
 		this.props.onFieldChange('headers', headers);
-		this.setState({headerError: error});
 	},
 	onHeaderRemove: function(index) {
-		var headers = _.cloneDeep(this.props.rule.headers);
-		headers.splice(index, 1);
+		var ruleHeaders = _.cloneDeep(this.props.rule.headers);
+		ruleHeaders.splice(index, 1);
 
+		var headers = this.prepareHeaders(ruleHeaders);
 		this.props.onFieldChange('headers', headers);
 	},
 	onHeaderAdd: function() {
@@ -235,30 +263,21 @@ var RuleForm = React.createClass({
 		e.preventDefault();
 		var ruleForm = this.props.rule;
 
-		var headers = _.reduce(ruleForm.headers, function(obj, item) {
-			if(!_.trim(item.name) || !_.trim(item.value)) {
-				return obj;
-			}
-
-			obj[item.name] = item.value;
-			return obj;
-		}, {});
-
-		var rule = {
-			id: ruleForm.id,
-			method: ruleForm.method,
-			path: ruleForm.path,
-			headers: headers,
-			statusCode: ruleForm.statusCode,
-			response: ruleForm.response
-		};
-
+		var rule = this.ruleMapper(ruleForm);
 		this.props.onAddRule(rule);
 	},
 	onUpdateRule: function(e) {
 		e.preventDefault();
 		var ruleForm = this.props.rule;
 
+		var rule = this.ruleMapper(ruleForm);
+		this.props.onUpdateRule(rule);
+	},
+	onCancelEditRule: function(e) {
+		e.preventDefault();
+		this.props.onCancelEditRule(this.props.rule);
+	},
+	ruleMapper: function(ruleForm){
 		var headers = _.reduce(ruleForm.headers, function(obj, item) {
 			if(!_.trim(item.name) || !_.trim(item.value)) {
 				return obj;
@@ -268,20 +287,25 @@ var RuleForm = React.createClass({
 			return obj;
 		}, {});
 
-		var rule = {
+		return {
 			id: ruleForm.id,
 			method: ruleForm.method,
 			path: ruleForm.path,
+			reqBody: ruleForm.reqBody && JSON.parse(ruleForm.reqBody),
 			headers: headers,
 			statusCode: ruleForm.statusCode,
 			response: ruleForm.response
 		};
-
-		this.props.onUpdateRule(rule);
 	},
-	onCancelEditRule: function(e) {
-		e.preventDefault();
-		this.props.onCancelEditRule(this.props.rule);
+	prepareHeaders: function(ruleHeaders){
+		const counts = _.countBy(ruleHeaders, 'name');
+		return _
+			.chain(ruleHeaders)
+			.map(function(header) {
+				const error = header.name && counts[header.name] > 1;
+				return Object.assign({}, header, {error: error})
+			})
+			.value();
 	},
 	render: function() {
 		var self = this;
@@ -290,34 +314,38 @@ var RuleForm = React.createClass({
 			if(rule.isEdit) {
 				return (
 					<div>
-						<button
-							onClick={self.onCancelEditRule}
-							className="btn btn-danger pull-right">
-							Cancel
-						</button>
-						<button
-							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
-							onClick={self.onUpdateRule}
-							className="btn btn-success pull-right">
-							OK
-						</button>
+						<span className="pull-right">
+							<button
+								disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
+								onClick={self.onUpdateRule}
+								className="btn btn-success left-margin">
+								OK
+							</button>
+							<button
+								onClick={self.onCancelEditRule}
+								className="btn btn-danger left-margin">
+								Cancel
+							</button>
+						</span>
 					</div>
 				);
 			}
 
 			return (
 				<div>
-					<button
-						onClick={self.onCancelEditRule}
-						className="btn btn-danger pull-right">
-						Cancel
-					</button>
-					<button
-						disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError}
-						onClick={self.onAddRule}
-						className="btn btn-success pull-right">
-						Add
-					</button>
+					<span className="pull-right">
+						<button
+							disabled={self.state.pathIsEmpty || self.state.statusCodeIsEmpty || self.state.headerError || self.state.reqBodyIsCorrupt}
+							onClick={self.onAddRule}
+							className="btn btn-success left-margin">
+							Add
+						</button>
+						<button
+							onClick={self.onCancelEditRule}
+							className="btn btn-danger left-margin">
+							Cancel
+						</button>
+					</span>
 				</div>
 			);
 		}
@@ -330,6 +358,7 @@ var RuleForm = React.createClass({
 					<h4 className="panel-title">Add rule</h4>
 				</div>
 				<div className="panel-body">
+					<h4>Request rule</h4>
 					<div className="form-group">
 						<label>Method</label>
 						<select onChange={this.onMethodChange} value={this.props.rule.method}
@@ -337,6 +366,8 @@ var RuleForm = React.createClass({
 						        className="form-control">
 							<option>GET</option>
 							<option>POST</option>
+							<option>PUT</option>
+							<option>DELETE</option>
 						</select>
 					</div>
 					<div className="form-group">
@@ -344,6 +375,14 @@ var RuleForm = React.createClass({
 						<input onChange={this.onPathChange} value={this.props.rule.path} ref="path"
 						       className="form-control"/>
 					</div>
+					<div className={'form-group ' + (this.state.reqBodyIsCorrupt ? 'has-error': '')}>
+						<label>Request Body</label>
+						<textarea onChange={this.onReqBodyChange} value={this.props.rule.reqBody}
+						          className="form-control vresize" rows="5"/>
+					</div>
+
+					<hr/>
+					<h4>Response rule</h4>
 					<div className="form-group">
 						<label>Status Code</label>
 						<input onChange={this.onStatusCodeChange} value={this.props.rule.statusCode}
@@ -409,7 +448,7 @@ var HeaderElement = React.createClass({
 					<button onClick={this.onRemove}
 					        disabled={this.props.disableRemoveButton}
 					        type="button"
-					        className="btn btn-danger">
+					        className="btn btn-danger  left-margin">
 						Remove
 					</button>
 				</div>
@@ -451,13 +490,7 @@ var App = React.createClass({
 		return {
 			rules: [],
 			mode: 'PROXY',
-			ruleForm: {
-				headers: [{name: '', value: ''}],
-				method: 'GET',
-				path: '',
-				statusCode: '',
-				response: ''
-			}
+			ruleForm: this.createRuleForm()
 		};
 	},
 	onRuleFormChange: function(fieldName, value) {
@@ -481,13 +514,7 @@ var App = React.createClass({
 			.then(function(rule) {
 				self.setState({
 					rules: [rule].concat(self.state.rules),
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -512,13 +539,7 @@ var App = React.createClass({
 				var rules = _update(self.state.rules, rule.id, newRule);
 				self.setState({
 					rules: rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -530,13 +551,7 @@ var App = React.createClass({
 
 		this.setState({
 			rules: rules,
-			ruleForm: {
-				headers: [{name: '', value: ''}],
-				method: 'GET',
-				path: '',
-				statusCode: '',
-				response: ''
-			}
+			ruleForm: this.createRuleForm()
 		});
 	},
 	onEditRule: function(rule) {
@@ -547,11 +562,14 @@ var App = React.createClass({
 			};
 			return header;
 		});
+		
+		headers = headers.length > 0 ? headers : [{name: '', value: ''}];
+		var reqBody = rule.reqBody && JSON.stringify(rule.reqBody);
 
 		var rules = _update(this.state.rules, rule.id, {isEdit: true});
 		rules = _update(rules, this.state.ruleForm.id, {isEdit: false});
 
-		var ruleForm = _.assign({}, rule, {headers: headers, isEdit: true});
+		var ruleForm = _.assign({}, rule, {headers: headers, reqBody: reqBody, isEdit: true});
 
 		this.setState({
 			rules: rules,
@@ -590,13 +608,7 @@ var App = React.createClass({
 					title: config.title,
 					mode: config.mode,
 					rules: config.rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
@@ -622,6 +634,24 @@ var App = React.createClass({
 	onRefreshRules: function() {
 		this.getConfig();
 	},
+	onClearRules: function(){
+		var self = this;
+
+		fetch('/api/rules/', {
+			method: 'DELETE'
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(rules) {
+				self.setState({
+					rules: rules
+				});
+			})
+			.catch(function(err) {
+				console.error(err);
+			});
+	},
 	getConfig: function() {
 		var self = this;
 		return fetch('/api/rules')
@@ -633,18 +663,22 @@ var App = React.createClass({
 					title: config.title,
 					mode: config.mode,
 					rules: config.rules,
-					ruleForm: {
-						headers: [{name: '', value: ''}],
-						method: 'GET',
-						path: '',
-						statusCode: '',
-						response: ''
-					}
+					ruleForm: self.createRuleForm()
 				});
 			})
 			.catch(function(err) {
 				console.error(err);
 			});
+	},
+	createRuleForm: function(){
+		return {
+			headers: [{name: '', value: ''}],
+			method: 'GET',
+			path: '',
+			reqBody: '',
+			statusCode: '',
+			response: ''
+		};
 	},
 	componentDidMount: function() {
 		this.onRuleFormChange = this.onRuleFormChange.bind(this);
@@ -655,6 +689,7 @@ var App = React.createClass({
 		this.onEditRule = this.onEditRule.bind(this);
 		this.onRemoveRule = this.onRemoveRule.bind(this);
 		this.onRefreshRules = this.onRefreshRules.bind(this);
+		this.onClearRules = this.onClearRules.bind(this);
 
 		this.onUploadRules = this.onUploadRules.bind(this);
 		this.onChangeMode = this.onChangeMode.bind(this);
@@ -679,9 +714,11 @@ var App = React.createClass({
 				          onUpdateRule={this.onUpdateRule}
 				          onCancelEditRule={this.onCancelEditRule}/>
 				<RulesList rules={this.state.rules}
+				           mode={this.state.mode}
 				           onEditRule={this.onEditRule}
 				           onRemoveRule={this.onRemoveRule}
-				           onRefreshRules={this.onRefreshRules}/>
+				           onRefreshRules={this.onRefreshRules}
+				           onClearRules={this.onClearRules}/>
 			</div>
 		);
 	}

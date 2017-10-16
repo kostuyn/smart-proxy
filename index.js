@@ -1,6 +1,5 @@
 'use strict';
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const connectPort = process.env.CONNECT_PORT || 8001;
 const httpProxyPort = process.env.HTTP_PROXY_PORT || 9001;
 const httpsProxyPort = process.env.HTTPS_PROXY_PORT || 9002;

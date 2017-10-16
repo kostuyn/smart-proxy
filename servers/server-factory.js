@@ -2,33 +2,38 @@
 
 const http = require('http');
 const https = require('https');
+const _ = require('lodash');
 
-exports.listenHttp = function(port, log){
+exports.listenHttp = function(port, log) {
 	const server = http.createServer();
 	server.on('error', _onError(port, log));
 	server.on('listening', _onListening(port, log));
 
 	server.listen(port);
-	
+
 	return server;
 };
 
-exports.listenHttps = function(port, options, log){
-	const server = https.createServer(options);	
+exports.listenHttps = function(port, options, log) {
+	const server = https.createServer(options);
 	server.on('error', _onError(port, log));
 	server.on('listening', _onListening(port, log));
 	server.listen(port);
-	
+
 	return server;
 };
 
-exports.httpProxy = function(log){
+exports.httpProxy = function(configService, log) {
 	return function(req, res, callback) {
-		callback = callback || function(){};
-		
-		const options = _createOptions(req);
+		callback = callback || function() {
+			};
 
-		const proxyReq = http.request(options, function (response) {
+		const remoteHost = configService.getRemoteHost();
+		const options = _createOptions(req, remoteHost);
+
+		log.info('HTTP PROXY', options.method, options.hostname + ':' + options.port + options.path);
+
+		const proxyReq = http.request(options, function(response) {
 			res.writeHead(response.statusCode, response.headers);
 			response.pipe(res);
 			callback(null, response);
@@ -36,18 +41,24 @@ exports.httpProxy = function(log){
 
 		req.pipe(proxyReq);
 
-		proxyReq.on('error', function(error){
+		proxyReq.on('error', function(error) {
 			log.error('Http proxy', error);
+			res.status(500).send(error);
 		});
 	}
 };
 
-exports.httpsProxy = function(log){
+exports.httpsProxy = function(configService, log) {
 	return function(req, res, callback) {
-		callback = callback || function(){};
-		const options = _createOptions(req);
+		callback = callback || function() {
+			};
 
-		const proxyReq = https.request(options, function (response) {
+		const remoteHost = configService.getRemoteHost();
+		const options = _createOptions(req, remoteHost);
+
+		log.info('HTTPS PROXY', options.method, options.hostname + ':' + options.port + options.path);
+
+		const proxyReq = https.request(options, function(response) {
 			res.writeHead(response.statusCode, response.headers);
 			response.pipe(res);
 			callback(null, response);
@@ -55,18 +66,20 @@ exports.httpsProxy = function(log){
 
 		req.pipe(proxyReq);
 
-		proxyReq.on('error', function(error){
+		proxyReq.on('error', function(error) {
 			log.error('Https proxy', error);
+			res.status(500).send(error);
 		});
 	}
 };
 
-function _createOptions(req){
+function _createOptions(req, remoteHost) {
 	const protocol = req.headers['x-forwarded-prot'] || 'https';
-	const parsedHost = req.headers['x-forwarded-host'] || req.hostname;
+	const parsedHost = remoteHost || req.headers['x-forwarded-host'] || req.hostname;
 	const splitHost = parsedHost.split(':');
 
 	const hostName = splitHost[0];
+
 	const port = parseInt(splitHost[1], 10) || (protocol == 'https' ? 443 : 80);
 
 	return {
@@ -74,7 +87,8 @@ function _createOptions(req){
 		port: port,
 		path: req.url,
 		method: req.method,
-		headers: req.headers
+		headers: Object.assign({}, req.headers, {'host': hostName}), // change 'host' header to hostName
+		rejectUnauthorized: false
 	};
 }
 
@@ -102,7 +116,7 @@ function _onError(port, log) {
 }
 
 function _onListening(port, log) {
-	return function(){
+	return function() {
 		var bind = 'port ' + port;
 		log.info('Listening on ' + bind);
 	}

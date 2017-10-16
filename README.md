@@ -9,9 +9,34 @@ Makes fake response by request url or proxies to target url.
 |HTTP_PROXY_PORT | 9001| http sniffer port|
 |HTTPS_PROXY_PORT | 9002| https sniffer port|
 |MANAGE_PORT | 7001| management panel port|
+|REMOTE_HOST | undefined | set target remote host (override 'X-Forwarded-Host') |
 
 # How to use
+## Install and run
+
+```bash
+git clone https://github.com/kostuyn/smart-proxy.git
+cd smart-proxy
+npm install
+npm start
 ```
+
+## Direct mode
+You can do request direct to the Proxy. Set REMOTE_HOST and request ```https://{proxy_host}:{HTTPS_PROXY_PORT}/{path}```
+
+```bash
+REMOTE_HOST=myrestapi.com npm start
+```
+
+Do request to Smart-Proxy, all requests will proxying to the target REMOTE_HOST or return fake response
+
+```bash
+curl https://localhost:9002/rest_api_path?foo=bar --insecure
+```
+
+## Proxy mode
+You can use Smart-Proxy as proxy. Add this code to your app
+```javascript
 const request = require('request');
 ...
 const options = {url: targetUrl};             // options for request module
@@ -32,16 +57,37 @@ request(options, function(err, response){     // do request
 ...
 ```
 
+Start Smart-Proxy
+
+```bash
+npm start
+```
+
+Do request to your app, all requests will go through Smart-Proxy
+```bash
+curl http://myrestapi.com/rest_api_path?foo=bar
+```
+
+## Management panel
+Smart-Proxy management panel will be available by link ```http://localhost:7001```
+
 # TODO
-1. ~~fake content & headers~~
+1. common:
+    * ~~add rule~~
+    * ~~remove rule~~
+    * ~~edit rule~~
+    * ~~fake response & headers~~
 2. proxy modes
 	* ~~PROXY (return fake response or proxy to target)~~
 	* ~~CAPTURE (write all target responses to config)~~
-	* PLAY (execute every rule only once, in series by timestamp)
-	* MOCK (fake server - deirect request without proxying)
+	* ~~PLAY (execute every rule only once, in series by timestamp)~~
+	* ~~MOCK (fake server - direct request to proxy)~~ NOTE: while via REMOTE_HOST env
 3. matching rules by:
+    * ~~path~~
 	* query
 	* params (/mypath/:params/entity)
-	* content
+	* ~~content~~
 4. more logs - method, headers, content, etc. (Enable/Disable)
 5. send logs to UI (socket.io)
+6. socket proxy
+7. response with redirect (3xx status code)
